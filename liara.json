@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/liara.json",
+  "platform": "node",
+  "app": "medidoc",
+  "port": 3000,
+  "node": {
+    "version": "20"
+  },
+  "build": {
+    "command": "pnpm build"
+  },
+  "start": {
+    "command": "pnpm start"
+  },
+  "disks": []
+}

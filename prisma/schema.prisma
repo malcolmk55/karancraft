@@ -1,0 +1,359 @@
+// MediDoc — PostgreSQL Database Schema (Doc 05 to 09)
+// Designed for production deployment on Liara Hosting (پایگاه داده مدیریت‌شده PostgreSQL لیارا)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  admin
+  doctor
+  receptionist
+}
+
+enum EncounterStatus {
+  draft
+  finalized
+}
+
+enum SexType {
+  male
+  female
+  other
+}
+
+enum ConnectionStatus {
+  pending
+  accepted
+  rejected
+  blocked
+}
+
+enum ShareAccessLevel {
+  read_only
+  read_write
+}
+
+enum SubscriptionPlanType {
+  trial
+  bronze
+  silver
+  gold
+}
+
+enum SubscriptionStatus {
+  active
+  expired
+  cancelled
+  past_due
+}
+
+enum PaymentStatus {
+  pending
+  success
+  failed
+  refunded
+}
+
+// ================= USER & RBAC =================
+model User {
+  id               String        @id @default(uuid())
+  email            String        @unique
+  passwordHash     String
+  fullName         String
+  role             UserRole      @default(doctor)
+  isActive         Boolean       @default(true)
+  lastLoginAt      DateTime?
+  twoFactorEnabled Boolean       @default(false)
+  twoFactorSecret  String?       // For TOTP (Google Authenticator)
+  doctor           Doctor?
+  receptionist     Receptionist?
+  auditLogs        AuditLog[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([email])
+  @@index([role, isActive])
+}
+
+model Doctor {
+  id                   String             @id @default(uuid())
+  userId               String             @unique
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName             String
+  medicalCouncilNumber String             @unique
+  specialties          String[]           // ["internal", "general"]
+  clinicName           String?
+  bio                  String?
+  city                 String?
+  avatar               String?
+  offices              DoctorOffice[]
+  createdPatients      Patient[]          @relation("DoctorCreatedPatients")
+  visits               Visit[]
+  sentConnections      DoctorConnection[] @relation("SentConnections")
+  receivedConnections  DoctorConnection[] @relation("ReceivedConnections")
+  ownedShares          SharedPatient[]    @relation("OwnerDoctorShares")
+  receivedShares       SharedPatient[]    @relation("SharedDoctorShares")
+  subscription         DoctorSubscription?
+  transactions         PaymentTransaction[]
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([medicalCouncilNumber])
+}
+
+model Receptionist {
+  id        String        @id @default(uuid())
+  userId    String        @unique
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName  String
+  officeId  String
+  office    MedicalOffice @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([officeId])
+}
+
+// ================= MULTI-OFFICE (DOC 07) =================
+model MedicalOffice {
+  id            String         @id @default(uuid())
+  name          String
+  address       String?
+  phone         String?
+  city          String         @default("تهران")
+  doctors       DoctorOffice[]
+  receptionists Receptionist[]
+  patients      Patient[]
+  visits        Visit[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([city])
+}
+
+model DoctorOffice {
+  id        String        @id @default(uuid())
+  doctorId  String
+  doctor    Doctor        @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  officeId  String
+  office    MedicalOffice @relation(fields: [officeId], references: [id], onDelete: Cascade)
+  role      String        @default("member") // "owner" | "member"
+  joinedAt  DateTime      @default(now())
+
+  @@unique([doctorId, officeId])
+}
+
+// ================= PATIENT & VISIT (DOC 05 & 09) =================
+model Patient {
+  id                String          @id @default(uuid())
+  fullName          String
+  nationalId        String?
+  phone             String
+  birthDate         String?
+  age               Int?
+  sex               SexType         @default(male)
+  bloodType         String?
+  allergies         String[]
+  chronicConditions String[]
+  notes             String?         // App-level AES-256 encrypted
+  createdByDoctorId String?
+  createdByDoctor   Doctor?         @relation("DoctorCreatedPatients", fields: [createdByDoctorId], references: [id])
+  createdByOfficeId String?
+  createdByOffice   MedicalOffice?  @relation(fields: [createdByOfficeId], references: [id])
+  officeName        String?
+  visits            Visit[]
+  sharedRecords     SharedPatient[]
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([phone])
+  @@index([nationalId])
+  @@index([createdByOfficeId])
+}
+
+model Visit {
+  id                     String          @id @default(uuid())
+  patientId              String
+  patient                Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId               String
+  doctor                 Doctor          @relation(fields: [doctorId], references: [id])
+  doctorName             String
+  officeId               String?
+  office                 MedicalOffice?  @relation(fields: [officeId], references: [id])
+  officeName             String?
+  specialty              String          @default("internal")
+  visitDate              String
+  status                 EncounterStatus @default(draft)
+  durationSeconds        Int             @default(0)
+
+  // Structured Standard Phrases (Schema-first)
+  chiefComplaintIds      String[]
+  chiefComplaintsText    String[]
+
+  // Doc 09: Dynamic Custom Entries (Escape Hatches)
+  customChiefComplaints  String[]
+
+  // Structured Vitals (JSONB)
+  vitals                 Json?
+
+  // Exam Findings
+  examFindingsIds        String[]
+  examFindingsText       String[]
+  customExamFindings     String[]
+
+  // Diagnoses
+  diagnosisIds           String[]
+  diagnosesText          String[]
+  customDiagnoses        String[]
+
+  // Doc 09: Item Modifiers (JSONB, e.g. { "pe_abd_1": "فقط در سمت راست" })
+  itemModifiers          Json?
+
+  // Treatment Plan
+  planNotes              String          @db.Text
+  freeTextFallback       String?         @db.Text
+
+  // AI Voice Transcript
+  voiceTranscript        String?         @db.Text
+
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+  finalizedAt            DateTime?
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([officeId])
+  @@index([visitDate])
+}
+
+// ================= DOCTOR NETWORK & SHARING (DOC 07) =================
+model DoctorConnection {
+  id          String           @id @default(uuid())
+  requesterId String
+  requester   Doctor           @relation("SentConnections", fields: [requesterId], references: [id], onDelete: Cascade)
+  receiverId  String
+  receiver    Doctor           @relation("ReceivedConnections", fields: [receiverId], references: [id], onDelete: Cascade)
+  status      ConnectionStatus @default(pending)
+  requestedAt DateTime         @default(now())
+  respondedAt DateTime?
+
+  @@unique([requesterId, receiverId])
+  @@index([requesterId, status])
+  @@index([receiverId, status])
+}
+
+model SharedPatient {
+  id                 String           @id @default(uuid())
+  patientId          String
+  patient            Patient          @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  ownerDoctorId      String
+  ownerDoctor        Doctor           @relation("OwnerDoctorShares", fields: [ownerDoctorId], references: [id])
+  ownerDoctorName    String?
+  sharedWithDoctorId String
+  sharedWithDoctor   Doctor           @relation("SharedDoctorShares", fields: [sharedWithDoctorId], references: [id])
+  sharedWithDoctorName String?
+  accessLevel        ShareAccessLevel @default(read_only)
+  patientConsent     Boolean          @default(true)
+  notes              String?
+  sharedAt           DateTime         @default(now())
+  revokedAt          DateTime?
+  isActive           Boolean          @default(true)
+
+  @@unique([patientId, ownerDoctorId, sharedWithDoctorId])
+  @@index([sharedWithDoctorId, isActive])
+}
+
+// ================= SUBSCRIPTION & BILLING (DOC 08) =================
+model SubscriptionPlan {
+  id               String               @id @default(uuid())
+  name             SubscriptionPlanType @unique
+  displayName      String
+  maxPatients      Int                  // -1 for unlimited
+  priceMonthly     Decimal              @db.Decimal(12, 2)
+  priceAnnual      Decimal              @db.Decimal(12, 2)
+  maxOffices       Int                  @default(1)
+  maxReceptionists Int                  @default(0)
+  maxConnections   Int                  @default(5)
+  hasAiVoice       Boolean              @default(false)
+  features         Json                 // Array of string features
+  isActive         Boolean              @default(true)
+  subscriptions    DoctorSubscription[]
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+}
+
+model DoctorSubscription {
+  id                 String               @id @default(uuid())
+  doctorId           String               @unique
+  doctor             Doctor               @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  planId             String
+  plan               SubscriptionPlan     @relation(fields: [planId], references: [id])
+  planName           SubscriptionPlanType
+  status             SubscriptionStatus   @default(active)
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  trialEndsAt        DateTime?
+  autoRenew          Boolean              @default(true)
+  transactions       PaymentTransaction[]
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@index([status, currentPeriodEnd])
+}
+
+model PaymentTransaction {
+  id             String             @id @default(uuid())
+  doctorId       String
+  doctor         Doctor             @relation(fields: [doctorId], references: [id])
+  subscriptionId String
+  subscription   DoctorSubscription @relation(fields: [subscriptionId], references: [id])
+  planName       String
+  amount         Decimal            @db.Decimal(12, 2)
+  currency       String             @default("IRR")
+  gateway        String             // "zarinpal", "idpay"
+  gatewayRefId   String?
+  status         PaymentStatus      @default(pending)
+  paidAt         DateTime?
+  createdAt      DateTime           @default(now())
+
+  @@index([doctorId, status])
+}
+
+// ================= AUDIT LOGS (DOC 05 & 06) =================
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  userName   String
+  userRole   UserRole
+  action     String   // e.g. "patient.create", "visit.finalize", "patient.share"
+  entityType String   // "Patient", "Visit", "SharedPatient"
+  entityId   String
+  metadata   Json?    // Before/after state diff
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId, action, createdAt])
+  @@index([entityType, entityId])
+}
+
+// ================= CLINICAL TEMPLATES =================
+model SpecialtyTemplatePhrase {
+  id          String   @id @default(uuid())
+  specialty   String   // "general", "internal"
+  section     String   // "chief_complaint", "exam_finding", "diagnosis"
+  systemGroup String?  // "عمومی", "قلبی-عروقی", "تنفسی", "گوارش", "مغز و اعصاب"
+  phraseText  String
+  code        String?  // ICD-10 or shorthand
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([specialty, section])
+}

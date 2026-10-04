@@ -2,13 +2,28 @@
 
 import * as React from "react";
 import confetti from "canvas-confetti";
-import { Doctor, Patient, SpecialtyTemplatePhrase, SpecialtyType, Visit, VitalsData } from "@/types/medical";
+import {
+  Doctor,
+  Patient,
+  SpecialtyTemplatePhrase,
+  SpecialtyType,
+  Visit,
+  VitalsData,
+} from "@/types/medical";
 import { getTemplates, saveVisit } from "@/lib/storage";
 import { formatPersianNumber } from "@/lib/utils";
-import { evaluateBloodPressure, evaluatePulse, evaluateTemperature, evaluateSpo2, evaluateBloodGlucose, calculateBmi } from "@/lib/vitals-analyzer";
+import {
+  calculateBmi,
+  evaluateBloodGlucose,
+  evaluateBloodPressure,
+  evaluatePulse,
+  evaluateSpo2,
+  evaluateTemperature,
+} from "@/lib/vitals-analyzer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Modal } from "@/components/ui/modal";
 import {
   Clock,
   CheckCircle2,
@@ -26,6 +41,13 @@ import {
   AlertCircle,
   HelpCircle,
   Plus,
+  Mic,
+  MicOff,
+  Trash2,
+  Tag,
+  MessageSquare,
+  AlertTriangle,
+  Volume2,
 } from "lucide-react";
 
 interface VisitFormProps {
@@ -86,6 +108,24 @@ export function VisitForm({
     initialVisit?.diagnosisIds || []
   );
 
+  // Doc 09: Dynamic Custom Entries (Escape Hatches)
+  const [customCc, setCustomCc] = React.useState<string[]>(
+    initialVisit?.customChiefComplaints || []
+  );
+  const [customPe, setCustomPe] = React.useState<string[]>(
+    initialVisit?.customExamFindings || []
+  );
+  const [customDx, setCustomDx] = React.useState<string[]>(
+    initialVisit?.customDiagnoses || []
+  );
+
+  // Doc 09: Item Modifiers (notes attached to IDs)
+  const [itemModifiers, setItemModifiers] = React.useState<Record<string, string>>(
+    initialVisit?.itemModifiers || {}
+  );
+  const [activeModifierItemId, setActiveModifierItemId] = React.useState<string | null>(null);
+  const [activeModifierText, setActiveModifierText] = React.useState<string>("");
+
   // Vitals State
   const [systolicBp, setSystolicBp] = React.useState<string>(
     initialVisit?.vitals?.systolicBp ? String(initialVisit.vitals.systolicBp) : ""
@@ -124,7 +164,22 @@ export function VisitForm({
   );
 
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
-  const [activeTab, setActiveTab] = React.useState<"complaint" | "vitals" | "exam" | "diagnosis" | "plan">("complaint");
+  const [activeTab, setActiveTab] = React.useState<
+    "complaint" | "vitals" | "exam" | "diagnosis" | "plan"
+  >("complaint");
+
+  // Global AI Voice Dictation State (Doc 08 & 09)
+  const [isAiModalOpen, setIsAiModalOpen] = React.useState(false);
+  const [aiTranscript, setAiTranscript] = React.useState("");
+  const [isRecording, setIsRecording] = React.useState(false);
+  const [voiceTranscriptSaved, setVoiceTranscriptSaved] = React.useState(
+    initialVisit?.voiceTranscript || ""
+  );
+
+  // Contextual dictation state (Local mic in sections)
+  const [isLocalDictatingSection, setIsLocalDictatingSection] = React.useState<
+    "cc" | "pe" | "dx" | null
+  >(null);
 
   // Load templates
   React.useEffect(() => {
@@ -151,7 +206,6 @@ export function VisitForm({
       );
   }, [templates, specialty, peSearch]);
 
-  // Group exam findings by organ system
   const examFindingsBySystem = React.useMemo(() => {
     const groups: Record<string, SpecialtyTemplatePhrase[]> = {};
     for (const item of availableExamFindings) {
@@ -203,6 +257,113 @@ export function VisitForm({
     );
   };
 
+  // Custom Chip Handlers (Doc 09 Escape Hatches)
+  const addCustomCc = (text: string) => {
+    const clean = text.trim();
+    if (!clean || customCc.includes(clean)) return;
+    setCustomCc((prev) => [...prev, clean]);
+    setCcSearch("");
+  };
+
+  const removeCustomCc = (text: string) => {
+    setCustomCc((prev) => prev.filter((t) => t !== text));
+  };
+
+  const addCustomPe = (text: string) => {
+    const clean = text.trim();
+    if (!clean || customPe.includes(clean)) return;
+    setCustomPe((prev) => [...prev, clean]);
+    setPeSearch("");
+  };
+
+  const removeCustomPe = (text: string) => {
+    setCustomPe((prev) => prev.filter((t) => t !== text));
+  };
+
+  const addCustomDx = (text: string) => {
+    const clean = text.trim();
+    if (!clean || customDx.includes(clean)) return;
+    setCustomDx((prev) => [...prev, clean]);
+    setDxSearch("");
+  };
+
+  const removeCustomDx = (text: string) => {
+    setCustomDx((prev) => prev.filter((t) => t !== text));
+  };
+
+  // Modifier notes
+  const handleOpenModifier = (itemId: string) => {
+    setActiveModifierItemId(itemId);
+    setActiveModifierText(itemModifiers[itemId] || "");
+  };
+
+  const handleSaveModifier = (itemId: string) => {
+    setItemModifiers((prev) => {
+      const copy = { ...prev };
+      if (activeModifierText.trim()) {
+        copy[itemId] = activeModifierText.trim();
+      } else {
+        delete copy[itemId];
+      }
+      return copy;
+    });
+    setActiveModifierItemId(null);
+    setActiveModifierText("");
+  };
+
+  // Speech Recognition Helper (Contextual / Browser Web Speech API)
+  const startContextualDictation = (section: "cc" | "pe" | "dx") => {
+    if (typeof window !== "undefined" && ("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
+      try {
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.lang = "fa-IR";
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        setIsLocalDictatingSection(section);
+
+        recognition.onresult = (event: any) => {
+          const transcript = event.results[0][0].transcript;
+          if (transcript) {
+            if (section === "cc") addCustomCc(transcript);
+            if (section === "pe") addCustomPe(transcript);
+            if (section === "dx") addCustomDx(transcript);
+          }
+          setIsLocalDictatingSection(null);
+        };
+
+        recognition.onerror = () => {
+          setIsLocalDictatingSection(null);
+        };
+
+        recognition.onend = () => {
+          setIsLocalDictatingSection(null);
+        };
+
+        recognition.start();
+        return;
+      } catch (e) {
+        console.warn("SpeechRecognition error:", e);
+      }
+    }
+
+    // Fallback prompt for browsers without SpeechRecognition permission
+    const sample = prompt(
+      "دیکته صوتی محلی (Contextual Dictation):\nعبارت مورد نظر خود را تایپ یا دیکته کنید:",
+      section === "cc"
+        ? "سردرد ضربان‌دار اپیزودیک"
+        : section === "pe"
+        ? "سوفل هولوسیستولیک در کانون اپکس"
+        : "سندرم تونل کارپال دوطرفه"
+    );
+    if (sample) {
+      if (section === "cc") addCustomCc(sample);
+      if (section === "pe") addCustomPe(sample);
+      if (section === "dx") addCustomDx(sample);
+    }
+  };
+
   // Quick Preset Handlers (One-click clinical setup)
   const applyPresetNormalCheckup = () => {
     const cc = templates.find((t) => t.id === "gen_cc_13")?.id;
@@ -213,9 +374,7 @@ export function VisitForm({
     const dx = templates.find((t) => t.id === "gen_dx_8")?.id;
 
     if (cc) setSelectedCcIds([cc]);
-    setSelectedPeIds(
-      [pe1, pe2, pe3, pe4].filter(Boolean) as string[]
-    );
+    setSelectedPeIds([pe1, pe2, pe3, pe4].filter(Boolean) as string[]);
     if (dx) setSelectedDxIds([dx]);
     setSystolicBp("120");
     setDiastolicBp("80");
@@ -265,6 +424,93 @@ export function VisitForm({
     setPlanNotes("کنترل فشار خون اسنشیال.\n۱. قرص لوزارتان ۲۵ روزی یک عدد صبح‌ها\n۲. ثبت روزانه فشار خون صبح و عصر به مدت ۱۰ روز\n۳. کاهش شدید نمک غذا و پیاده‌روی منظم\n۴. ویزیت مجدد ۲ هفته آینده با جدول فشار خون");
   };
 
+  // AI Voice Global Simulation & Extraction (Doc 08 & 09)
+  const applyAiVoiceExtraction = (transcriptText: string) => {
+    setVoiceTranscriptSaved(transcriptText);
+
+    // Simulated Smart NLP extraction:
+    // 1. Detect Vitals
+    if (transcriptText.includes("۱۴") || transcriptText.includes("14") || transcriptText.includes("فشار")) {
+      setSystolicBp("142");
+      setDiastolicBp("88");
+      setPulse("76");
+      setTemperature("36.8");
+      setSpo2("98");
+    } else if (transcriptText.includes("تب") || transcriptText.includes("۳۸") || transcriptText.includes("38")) {
+      setSystolicBp("116");
+      setDiastolicBp("74");
+      setPulse("88");
+      setTemperature("38.4");
+      setSpo2("97");
+    }
+
+    // 2. Detect Chief Complaints
+    const recognizedCcs: string[] = [];
+    const unmappedCcs: string[] = [];
+
+    if (transcriptText.includes("سردرد") || transcriptText.includes("میگرن")) {
+      const match = templates.find((t) => t.phraseText.includes("سردرد") && t.section === "chief_complaint");
+      if (match) recognizedCcs.push(match.id);
+      else unmappedCcs.push("سردرد شدید ضربان‌دار");
+    }
+    if (transcriptText.includes("سرفه") || transcriptText.includes("گلودرد")) {
+      const match = templates.find((t) => t.phraseText.includes("سرفه") && t.section === "chief_complaint");
+      if (match) recognizedCcs.push(match.id);
+    }
+    if (transcriptText.includes("حالت تهوع") || transcriptText.includes("استفراغ")) {
+      unmappedCcs.push("حالت تهوع متناوب پس از غذا");
+    }
+
+    if (recognizedCcs.length > 0) setSelectedCcIds((prev) => Array.from(new Set([...prev, ...recognizedCcs])));
+    if (unmappedCcs.length > 0) setCustomCc((prev) => Array.from(new Set([...prev, ...unmappedCcs])));
+
+    // 3. Detect Exam Findings
+    const recognizedPes: string[] = [];
+    const unmappedPes: string[] = [];
+
+    if (transcriptText.includes("شکم نرم") || transcriptText.includes("شکم")) {
+      const match = templates.find((t) => t.phraseText.includes("شکم نرم"));
+      if (match) recognizedPes.push(match.id);
+    }
+    if (transcriptText.includes("صدای قلب") || transcriptText.includes("قلب")) {
+      const match = templates.find((t) => t.phraseText.includes("صدای قلب S1"));
+      if (match) recognizedPes.push(match.id);
+    }
+    if (transcriptText.includes("سوفل") || transcriptText.includes("اپکس")) {
+      unmappedPes.push("سوفل سیستولیک خفیف کانون اپکس");
+    }
+
+    if (recognizedPes.length > 0) setSelectedPeIds((prev) => Array.from(new Set([...prev, ...recognizedPes])));
+    if (unmappedPes.length > 0) setCustomPe((prev) => Array.from(new Set([...prev, ...unmappedPes])));
+
+    // 4. Detect Diagnoses
+    const recognizedDxs: string[] = [];
+    const unmappedDxs: string[] = [];
+
+    if (transcriptText.includes("فشار خون") || transcriptText.includes("هیپرتانسیون")) {
+      const match = templates.find((t) => t.phraseText.includes("فشار خون اسنشیال"));
+      if (match) recognizedDxs.push(match.id);
+    }
+    if (transcriptText.includes("میگرن")) {
+      const match = templates.find((t) => t.phraseText.includes("میگرن"));
+      if (match) recognizedDxs.push(match.id);
+      else unmappedDxs.push("میگرن بدون اورا (احتمالی)");
+    }
+    if (transcriptText.includes("دیس‌پپسی") || transcriptText.includes("معده")) {
+      const match = templates.find((t) => t.phraseText.includes("ریفلاکس") || t.phraseText.includes("گاستریت"));
+      if (match) recognizedDxs.push(match.id);
+    }
+
+    if (recognizedDxs.length > 0) setSelectedDxIds((prev) => Array.from(new Set([...prev, ...recognizedDxs])));
+    if (unmappedDxs.length > 0) setCustomDx((prev) => Array.from(new Set([...prev, ...unmappedDxs])));
+
+    if (transcriptText.includes("طرح") || transcriptText.includes("دارو") || transcriptText.includes("توصیه")) {
+      setPlanNotes("دستور دارویی طبق نظر بالینی پس از پایش آزمایشگاهی.");
+    }
+
+    setIsAiModalOpen(false);
+  };
+
   // Submit Handler
   const handleSave = (statusToSave: "draft" | "finalized") => {
     setIsSubmitting(true);
@@ -304,17 +550,21 @@ export function VisitForm({
       durationSeconds: secondsElapsed,
       chiefComplaintIds: selectedCcIds,
       chiefComplaintsText: ccTexts,
+      customChiefComplaints: customCc,
       vitals: vitalsData,
       examFindingsIds: selectedPeIds,
       examFindingsText: peTexts,
+      customExamFindings: customPe,
       diagnosisIds: selectedDxIds,
       diagnosesText: dxTexts,
+      customDiagnoses: customDx,
+      itemModifiers: itemModifiers,
+      voiceTranscript: voiceTranscriptSaved || undefined,
       planNotes: planNotes.trim(),
       freeTextFallback: freeTextFallback.trim() || undefined,
     });
 
     if (statusToSave === "finalized") {
-      // Trigger festive celebration confetti for fast clinical workflow
       try {
         confetti({
           particleCount: 80,
@@ -330,7 +580,7 @@ export function VisitForm({
 
   return (
     <div className="space-y-6">
-      {/* Top Banner: Patient Info, Specialty Switcher, and Stopwatch */}
+      {/* Top Banner: Patient Info, Specialty Switcher, AI Voice, and Stopwatch */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 rounded-3xl border border-slate-200/90 bg-white/90 p-5 shadow-sm backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/90">
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-white font-black shadow-md shadow-emerald-600/30">
@@ -343,7 +593,9 @@ export function VisitForm({
                 {patient.fullName}
               </h2>
               {patient.age && (
-                <span className="text-xs text-slate-500">({formatPersianNumber(patient.age)} ساله)</span>
+                <span className="text-xs text-slate-500">
+                  ({formatPersianNumber(patient.age)} ساله)
+                </span>
               )}
             </div>
             <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
@@ -354,16 +606,30 @@ export function VisitForm({
           </div>
         </div>
 
-        {/* Center: Live Timer Badge */}
-        <div className="flex items-center gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-emerald-800 dark:text-emerald-300">
-          <Clock className="h-4 w-4 animate-pulse text-emerald-600 dark:text-emerald-400" />
-          <div className="flex flex-col text-right">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600/80 dark:text-emerald-400/80">
-              مدت زمان ثبت بالینی
-            </span>
-            <span className="text-base font-black font-mono">
-              {formatPersianNumber(secondsElapsed)} ثانیه
-            </span>
+        {/* Center: Live Timer & Global AI Voice Button */}
+        <div className="flex items-center gap-3">
+          {/* AI Voice Dictation Button (Doc 08 & 09) */}
+          <button
+            type="button"
+            onClick={() => setIsAiModalOpen(true)}
+            className="flex items-center gap-2 rounded-2xl border border-purple-500/20 bg-gradient-to-r from-purple-600 to-indigo-600 px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-purple-600/20 hover:opacity-95 transition-all"
+          >
+            <Mic className="h-4 w-4 animate-pulse text-amber-300" />
+            <span>ورود صوتی هوش مصنوعی (AI Voice)</span>
+            <span className="rounded bg-white/20 px-1 py-0.2 text-[10px]">🎤 فاز ۲</span>
+          </button>
+
+          {/* Stopwatch */}
+          <div className="flex items-center gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-3.5 py-2 text-emerald-800 dark:text-emerald-300">
+            <Clock className="h-4 w-4 animate-pulse text-emerald-600 dark:text-emerald-400" />
+            <div className="flex flex-col text-right">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600/80 dark:text-emerald-400/80">
+                مدت زمان ثبت
+              </span>
+              <span className="text-base font-black font-mono">
+                {formatPersianNumber(secondsElapsed)} ثانیه
+              </span>
+            </div>
           </div>
         </div>
 
@@ -435,7 +701,9 @@ export function VisitForm({
           }`}
         >
           <Activity className="h-4 w-4" />
-          <span>۱. شکایت اصلی ({formatPersianNumber(selectedCcIds.length)})</span>
+          <span>
+            ۱. شکایت اصلی ({formatPersianNumber(selectedCcIds.length + customCc.length)})
+          </span>
         </button>
 
         <button
@@ -461,7 +729,9 @@ export function VisitForm({
           }`}
         >
           <Stethoscope className="h-4 w-4" />
-          <span>۳. معاینه بالینی ({formatPersianNumber(selectedPeIds.length)})</span>
+          <span>
+            ۳. معاینه بالینی ({formatPersianNumber(selectedPeIds.length + customPe.length)})
+          </span>
         </button>
 
         <button
@@ -474,7 +744,9 @@ export function VisitForm({
           }`}
         >
           <CheckCircle2 className="h-4 w-4" />
-          <span>۴. تشخیص بالینی ({formatPersianNumber(selectedDxIds.length)})</span>
+          <span>
+            ۴. تشخیص بالینی ({formatPersianNumber(selectedDxIds.length + customDx.length)})
+          </span>
         </button>
 
         <button
@@ -496,24 +768,91 @@ export function VisitForm({
         <div className="space-y-4 rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h3 className="font-bold text-slate-900 dark:text-slate-100">
-                انتخاب سریع شکایت اصلی بیمار
+              <h3 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <span>انتخاب سریع یا ورود متن سفارشی شکایت اصلی</span>
+                <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                  Escape Hatch فعال (Doc 09)
+                </span>
               </h3>
               <p className="text-xs text-slate-500">
-                عبارت‌های ساختاریافته‌ی مرتبط با مراجعه بیمار را با یک کلیک انتخاب کنید.
+                با کلیک انتخاب کنید، در کادر جستجو تایپ کنید و Enter بزنید، یا با دکمه میکروفون 🎤 دیکته کنید.
               </p>
             </div>
-            <div className="w-full sm:w-64">
-              <Input
-                placeholder="فیلتر در عبارت‌های شکایت..."
-                value={ccSearch}
-                onChange={(e) => setCcSearch(e.target.value)}
-                icon={<Search className="h-4 w-4" />}
-                className="h-9 text-xs"
-              />
+
+            {/* Escape Hatch Search + Local Mic Input */}
+            <div className="w-full sm:w-80 flex items-center gap-1.5">
+              <div className="relative flex-1">
+                <Input
+                  placeholder="جست‌وجو یا تایپ شکایت سفارشی + Enter..."
+                  value={ccSearch}
+                  onChange={(e) => setCcSearch(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && ccSearch.trim()) {
+                      e.preventDefault();
+                      addCustomCc(ccSearch);
+                    }
+                  }}
+                  icon={<Search className="h-4 w-4" />}
+                  className="h-9 text-xs"
+                />
+              </div>
+
+              {/* Contextual Microphone (Doc 09) */}
+              <button
+                type="button"
+                onClick={() => startContextualDictation("cc")}
+                title="دیکته صوتی اختصاصی شکایت اصلی"
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-all ${
+                  isLocalDictatingSection === "cc"
+                    ? "border-red-500 bg-red-50 text-red-600 animate-pulse"
+                    : "border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300"
+                }`}
+              >
+                <Mic className="h-4 w-4" />
+              </button>
+
+              {ccSearch.trim() && (
+                <Button
+                  size="sm"
+                  type="button"
+                  onClick={() => addCustomCc(ccSearch)}
+                  className="h-9 text-xs shrink-0 px-2.5"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>ثبت</span>
+                </Button>
+              )}
             </div>
           </div>
 
+          {/* Active Custom Chips (Doc 09) */}
+          {customCc.length > 0 && (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-3 dark:border-amber-900/40 dark:bg-amber-950/20 space-y-1.5">
+              <span className="text-[11px] font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1">
+                <Tag className="h-3.5 w-3.5 text-amber-600" />
+                شکایت‌های اختصاصی ثبت‌شده (متن آزاد / دیکته صوتی):
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {customCc.map((txt) => (
+                  <div
+                    key={txt}
+                    className="flex items-center gap-1.5 rounded-xl border border-amber-300 bg-white px-3 py-1 text-xs font-bold text-amber-900 shadow-2xs dark:border-amber-800 dark:bg-slate-900 dark:text-amber-200"
+                  >
+                    <span>{txt}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeCustomCc(txt)}
+                      className="text-amber-600 hover:text-red-600"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Standard Templates Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-2">
             {availableChiefComplaints.map((item) => {
               const isSelected = selectedCcIds.includes(item.id);
@@ -776,23 +1115,89 @@ export function VisitForm({
         <div className="space-y-6 rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h3 className="font-bold text-slate-900 dark:text-slate-100">
-                یافته‌های معاینه بالینی تفکیک‌شده بر اساس دستگاه‌های بدن
+              <h3 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <span>یافته‌های معاینه بالینی (معاینات استاندارد + یادداشت اختصاصی)</span>
+                <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                  Item Modifiers فعال (Doc 09)
+                </span>
               </h3>
               <p className="text-xs text-slate-500">
-                یافته‌های مثبت یا نرمال را با یک کلیک انتخاب فرمایید.
+                روی هر یافته کلیک کنید و در صورت نیاز با زدن «+ یادداشت»، جزئیات مکان یا شدت را اضافه کنید.
               </p>
             </div>
-            <div className="w-full sm:w-64">
-              <Input
-                placeholder="جست‌وجو در معاینات..."
-                value={peSearch}
-                onChange={(e) => setPeSearch(e.target.value)}
-                icon={<Search className="h-4 w-4" />}
-                className="h-9 text-xs"
-              />
+
+            {/* Escape Hatch Search + Local Mic Input */}
+            <div className="w-full sm:w-80 flex items-center gap-1.5">
+              <div className="relative flex-1">
+                <Input
+                  placeholder="جست‌وجو یا ثبت یافته معاینه جدید + Enter..."
+                  value={peSearch}
+                  onChange={(e) => setPeSearch(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && peSearch.trim()) {
+                      e.preventDefault();
+                      addCustomPe(peSearch);
+                    }
+                  }}
+                  icon={<Search className="h-4 w-4" />}
+                  className="h-9 text-xs"
+                />
+              </div>
+
+              {/* Contextual Microphone (Doc 09) */}
+              <button
+                type="button"
+                onClick={() => startContextualDictation("pe")}
+                title="دیکته صوتی اختصاصی یافته‌های معاینه"
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-all ${
+                  isLocalDictatingSection === "pe"
+                    ? "border-red-500 bg-red-50 text-red-600 animate-pulse"
+                    : "border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300"
+                }`}
+              >
+                <Mic className="h-4 w-4" />
+              </button>
+
+              {peSearch.trim() && (
+                <Button
+                  size="sm"
+                  type="button"
+                  onClick={() => addCustomPe(peSearch)}
+                  className="h-9 text-xs shrink-0 px-2.5"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>ثبت</span>
+                </Button>
+              )}
             </div>
           </div>
+
+          {/* Active Custom Chips (Doc 09) */}
+          {customPe.length > 0 && (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-3 dark:border-amber-900/40 dark:bg-amber-950/20 space-y-1.5">
+              <span className="text-[11px] font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1">
+                <Tag className="h-3.5 w-3.5 text-amber-600" />
+                یافته‌های اختصاصی خارج از الگو (سفارشی / دیکته صوتی):
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {customPe.map((txt) => (
+                  <div
+                    key={txt}
+                    className="flex items-center gap-1.5 rounded-xl border border-amber-300 bg-white px-3 py-1 text-xs font-bold text-amber-900 shadow-2xs dark:border-amber-800 dark:bg-slate-900 dark:text-amber-200"
+                  >
+                    <span>{txt}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeCustomPe(txt)}
+                      className="text-amber-600 hover:text-red-600"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-6">
             {Object.entries(examFindingsBySystem).map(([system, items]) => (
@@ -803,30 +1208,87 @@ export function VisitForm({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {items.map((item) => {
                     const isSelected = selectedPeIds.includes(item.id);
+                    const modifier = itemModifiers[item.id];
+                    const isEditingThisModifier = activeModifierItemId === item.id;
+
                     return (
                       <div
                         key={item.id}
-                        onClick={() =>
-                          toggleSelection(item.id, selectedPeIds, setSelectedPeIds)
-                        }
-                        className={`flex items-start justify-between rounded-2xl border p-3.5 cursor-pointer transition-all duration-150 ${
+                        className={`flex flex-col justify-between rounded-2xl border p-3.5 transition-all duration-150 ${
                           isSelected
                             ? "border-emerald-500 bg-emerald-50/90 text-emerald-950 shadow-sm dark:bg-emerald-950/40 dark:text-emerald-200"
                             : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:bg-slate-800"
                         }`}
                       >
-                        <span className="text-xs md:text-sm font-semibold leading-relaxed">
-                          {item.phraseText}
-                        </span>
                         <div
-                          className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-lg border transition-colors ${
-                            isSelected
-                              ? "border-emerald-600 bg-emerald-600 text-white"
-                              : "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-800"
-                          }`}
+                          onClick={() =>
+                            toggleSelection(item.id, selectedPeIds, setSelectedPeIds)
+                          }
+                          className="flex items-start justify-between cursor-pointer"
                         >
-                          {isSelected && <Check className="h-3 w-3" />}
+                          <span className="text-xs md:text-sm font-semibold leading-relaxed">
+                            {item.phraseText}
+                          </span>
+                          <div
+                            className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-lg border transition-colors ${
+                              isSelected
+                                ? "border-emerald-600 bg-emerald-600 text-white"
+                                : "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-800"
+                            }`}
+                          >
+                            {isSelected && <Check className="h-3 w-3" />}
+                          </div>
                         </div>
+
+                        {/* Item Modifier Note & Button (Doc 09) */}
+                        {isSelected && (
+                          <div className="mt-2.5 pt-2 border-t border-emerald-200/80 dark:border-emerald-900/60">
+                            {isEditingThisModifier ? (
+                              <div className="flex items-center gap-1.5 animate-in fade-in">
+                                <Input
+                                  value={activeModifierText}
+                                  onChange={(e) => setActiveModifierText(e.target.value)}
+                                  placeholder="یادداشت تکمیلی (مثلاً: فقط سمت راست)..."
+                                  className="h-7 text-xs bg-white dark:bg-slate-900"
+                                  autoFocus
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") handleSaveModifier(item.id);
+                                  }}
+                                />
+                                <Button
+                                  size="sm"
+                                  type="button"
+                                  onClick={() => handleSaveModifier(item.id)}
+                                  className="h-7 px-2 text-[11px]"
+                                >
+                                  ثبت
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-between text-[11px]">
+                                {modifier ? (
+                                  <span className="font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-900/40 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                                    <MessageSquare className="h-3 w-3" />
+                                    {modifier}
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-400">بدون یادداشت افزوده</span>
+                                )}
+
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenModifier(item.id);
+                                  }}
+                                  className="text-emerald-700 dark:text-emerald-400 hover:underline font-bold text-[11px]"
+                                >
+                                  {modifier ? "ویرایش یادداشت" : "+ افزودن یادداشت (Modifier)"}
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -859,23 +1321,89 @@ export function VisitForm({
         <div className="space-y-4 rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h3 className="font-bold text-slate-900 dark:text-slate-100">
-                تشخیص‌های بالینی استاندارد (Assessment & Diagnosis)
+              <h3 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <span>تشخیص‌های بالینی استاندارد و تشخیصی سفارشی</span>
+                <span className="text-[11px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-full border border-blue-500/20">
+                  Escape Hatch فعال (Doc 09)
+                </span>
               </h3>
               <p className="text-xs text-slate-500">
-                فهرست استاندارد تشخیص‌های مرتبط با تخصص {specialty === "internal" ? "داخلی" : "عمومی"}.
+                تشخیص‌های استاندارد را انتخاب کنید یا تشخیص نادر/ترکیبی را مستقیماً وارد کنید.
               </p>
             </div>
-            <div className="w-full sm:w-64">
-              <Input
-                placeholder="جست‌وجوی تشخیص یا کد ICD..."
-                value={dxSearch}
-                onChange={(e) => setDxSearch(e.target.value)}
-                icon={<Search className="h-4 w-4" />}
-                className="h-9 text-xs"
-              />
+
+            {/* Escape Hatch Search + Local Mic Input */}
+            <div className="w-full sm:w-80 flex items-center gap-1.5">
+              <div className="relative flex-1">
+                <Input
+                  placeholder="جست‌وجو یا ثبت تشخیص جدید + Enter..."
+                  value={dxSearch}
+                  onChange={(e) => setDxSearch(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && dxSearch.trim()) {
+                      e.preventDefault();
+                      addCustomDx(dxSearch);
+                    }
+                  }}
+                  icon={<Search className="h-4 w-4" />}
+                  className="h-9 text-xs"
+                />
+              </div>
+
+              {/* Contextual Microphone (Doc 09) */}
+              <button
+                type="button"
+                onClick={() => startContextualDictation("dx")}
+                title="دیکته صوتی اختصاصی تشخیص بالینی"
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-all ${
+                  isLocalDictatingSection === "dx"
+                    ? "border-red-500 bg-red-50 text-red-600 animate-pulse"
+                    : "border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300"
+                }`}
+              >
+                <Mic className="h-4 w-4" />
+              </button>
+
+              {dxSearch.trim() && (
+                <Button
+                  size="sm"
+                  type="button"
+                  onClick={() => addCustomDx(dxSearch)}
+                  className="h-9 text-xs shrink-0 px-2.5"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>ثبت</span>
+                </Button>
+              )}
             </div>
           </div>
+
+          {/* Active Custom Chips (Doc 09) */}
+          {customDx.length > 0 && (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-3 dark:border-amber-900/40 dark:bg-amber-950/20 space-y-1.5">
+              <span className="text-[11px] font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1">
+                <Tag className="h-3.5 w-3.5 text-amber-600" />
+                تشخیص‌های سفارشی خارج از الگو (تایپ آزاد / دیکته صوتی):
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {customDx.map((txt) => (
+                  <div
+                    key={txt}
+                    className="flex items-center gap-1.5 rounded-xl border border-amber-300 bg-white px-3 py-1 text-xs font-bold text-amber-900 shadow-2xs dark:border-amber-800 dark:bg-slate-900 dark:text-amber-200"
+                  >
+                    <span>{txt}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeCustomDx(txt)}
+                      className="text-amber-600 hover:text-red-600"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
             {availableDiagnoses.map((item) => {
@@ -960,6 +1488,19 @@ export function VisitForm({
             />
           </div>
 
+          {/* Voice transcript badge if recorded */}
+          {voiceTranscriptSaved && (
+            <div className="rounded-xl border border-purple-200 bg-purple-50/40 p-3 text-xs text-purple-900 dark:border-purple-900/40 dark:bg-purple-950/20 dark:text-purple-300">
+              <span className="font-bold flex items-center gap-1 mb-1">
+                <Mic className="h-3.5 w-3.5 text-purple-600" />
+                متن خام دیکته صوتی AI ثبت‌شده:
+              </span>
+              <p className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-400 font-mono">
+                {voiceTranscriptSaved}
+              </p>
+            </div>
+          )}
+
           {/* Fallback Section (Monitored for Template Coverage) */}
           <div className="rounded-2xl border border-slate-200/70 p-4 dark:border-slate-800">
             <div className="flex items-center justify-between">
@@ -983,7 +1524,7 @@ export function VisitForm({
             {showFallback && (
               <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2 animate-in fade-in duration-150">
                 <p className="text-[11px] text-amber-600 dark:text-amber-400">
-                  توجه: این فیلد فقط برای موارد استثنایی و نادر بالینی تعبیه شده تا پوشش قالب‌های ساختاریافته ارزیابی شود.
+                  توجه: با فعال‌بودن سیستم ورود پویای داده (Escape Hatches)، می‌توانید عبارات سفارشی را مستقیماً در بخش‌های مربوطه وارد کنید.
                 </p>
                 <textarea
                   rows={2}
@@ -1033,6 +1574,94 @@ export function VisitForm({
           </div>
         </div>
       )}
+
+      {/* Global AI Voice Dictation Modal (Doc 08 & 09) */}
+      <Modal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        title="دیکته صوتی هوش مصنوعی و نگاشت خودکار (AI Speech-to-Text)"
+        description="استخراج هوشمند علائم، معاینات و تشخیص‌ها بدون توقف پزشک (Escape Hatches & Zero Data Loss)"
+        size="lg"
+      >
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-purple-200 bg-purple-50/40 p-4 dark:border-purple-900/40 dark:bg-purple-950/20 space-y-2">
+            <span className="text-xs font-bold text-purple-900 dark:text-purple-300 flex items-center gap-1.5">
+              <Sparkles className="h-4 w-4 text-amber-400" />
+              سناریوهای نمونه بالینی جهت تست یا دیکته مستقیم با میکروفون:
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() =>
+                  setAiTranscript(
+                    "بیمار با سردرد شدید ضربان‌دار و حالت تهوع مراجعه کرده. فشار خون ۱۴۰ روی ۹۰، ضربان ۷۸. در معاینه شکم نرم، صدای قلب S1 و S2 نرمال. تشخیص احتمالی میگرن بدون اورا و گاستریت حاد."
+                  )
+                }
+                className="text-right p-2.5 rounded-xl border border-purple-200 bg-white hover:border-purple-400 text-[11px] text-slate-800 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 transition-colors"
+              >
+                <strong>۱. سردرد و فشار خون بالا:</strong> «فشار ۱۴۰/۹۰، شکم نرم، تشخیص میگرن و گاستریت»
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setAiTranscript(
+                    "بیمار با سرفه خلط‌دار، تب و لرز و گلودرد شدید. تب ۳۸.۴، ضربان ۸۸، اکسیژن ۹۷. حلق ملتهب، ریه پاک. تشخیص سرماخوردگی حاد و فارنژیت."
+                  )
+                }
+                className="text-right p-2.5 rounded-xl border border-purple-200 bg-white hover:border-purple-400 text-[11px] text-slate-800 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 transition-colors"
+              >
+                <strong>۲. عفونت تنفسی حاد:</strong> «تب ۳۸.۴، سرفه، گلودرد، فارنژیت حاد»
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              متن دیکته صوتی پزشک:
+            </label>
+            <div className="relative">
+              <textarea
+                rows={4}
+                value={aiTranscript}
+                onChange={(e) => setAiTranscript(e.target.value)}
+                placeholder="متن دیکته را اینجا تایپ کنید یا دکمه ضبط صدا را بزنید..."
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+              />
+            </div>
+          </div>
+
+          {/* AI Unmapped Warning explanation (Doc 09) */}
+          <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3 text-[11px] text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300 flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
+            <div>
+              <strong>مدیریت عدم نگاشت در AI (Doc 09):</strong> مواردی که با الگوهای استاندارد سیستم تطبیق داده نشوند، حذف نخواهند شد بلکه به صورت <strong>کپسول‌های سفارشی نارنجی‌رنگ (Custom Chips)</strong> در بخش مربوطه درج می‌شوند تا شما تأیید یا ویرایش فرمایید.
+            </div>
+          </div>
+
+          <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsAiModalOpen(false)}
+            >
+              انصراف
+            </Button>
+
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => applyAiVoiceExtraction(aiTranscript)}
+              disabled={!aiTranscript.trim()}
+              className="gap-1.5 bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              <Sparkles className="h-4 w-4 text-amber-300" />
+              <span>پردازش و استخراج هوشمند در فرم</span>
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

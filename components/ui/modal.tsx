@@ -5,13 +5,14 @@ import { Dialog } from "@base-ui/react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface ModalProps {
+export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title?: React.ReactNode;
   description?: React.ReactNode;
   children: React.ReactNode;
   maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl";
+  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl";
   className?: string;
 }
 
@@ -21,9 +22,11 @@ export function Modal({
   title,
   description,
   children,
-  maxWidth = "2xl",
+  maxWidth,
+  size,
   className,
 }: ModalProps) {
+  const chosenWidth = size || maxWidth || "2xl";
   const maxWidthClasses = {
     sm: "max-w-sm",
     md: "max-w-md",
@@ -33,7 +36,7 @@ export function Modal({
     "3xl": "max-w-3xl",
     "4xl": "max-w-4xl",
     "5xl": "max-w-5xl",
-  }[maxWidth];
+  }[chosenWidth];
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>

@@ -16,14 +16,20 @@ import {
   Heart,
   Droplet,
   FileText,
+  Share2,
+  Building2,
+  CheckCircle2,
 } from "lucide-react";
 import { evaluateBloodPressure } from "@/lib/vitals-analyzer";
+import { getSharedPatients } from "@/lib/storage";
 
 interface PatientProfileProps {
   patient: Patient;
   visits: Visit[];
   onStartNewVisit: () => void;
   onEditPatient: () => void;
+  onOpenShareModal?: () => void;
+  isReadOnly?: boolean;
 }
 
 export function PatientProfile({
@@ -31,11 +37,17 @@ export function PatientProfile({
   visits,
   onStartNewVisit,
   onEditPatient,
+  onOpenShareModal,
+  isReadOnly = false,
 }: PatientProfileProps) {
   const lastVisit = visits[0];
   const bpStatus = lastVisit?.vitals?.systolicBp
     ? evaluateBloodPressure(lastVisit.vitals.systolicBp, lastVisit.vitals.diastolicBp)
     : null;
+
+  const activeShares = React.useMemo(() => {
+    return getSharedPatients().filter((s) => s.patientId === patient.id && s.isActive);
+  }, [patient.id]);
 
   return (
     <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-white to-emerald-50/30 p-6 shadow-sm backdrop-blur-md dark:border-slate-800 dark:from-slate-900 dark:via-slate-900 dark:to-emerald-950/20">
@@ -74,6 +86,14 @@ export function PatientProfile({
               <span className="text-xs text-slate-400 font-medium">
                 جنسیت: {patient.sex === "female" ? "خانم" : "آقا"}
               </span>
+
+              {/* Office Origin Badge */}
+              {patient.officeName && (
+                <span className="flex items-center gap-1 rounded-lg bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900/40">
+                  <Building2 className="h-3 w-3" />
+                  {patient.officeName}
+                </span>
+              )}
             </div>
 
             {/* Contact details */}
@@ -111,6 +131,14 @@ export function PatientProfile({
                   <span>سابقه: {patient.chronicConditions.join("، ")}</span>
                 </div>
               )}
+
+              {/* Shared with others indicator */}
+              {activeShares.length > 0 && (
+                <span className="flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300">
+                  <Share2 className="h-3 w-3" />
+                  اشتراک با {activeShares.length} همکار
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -138,23 +166,41 @@ export function PatientProfile({
           )}
 
           <div className="flex sm:flex-col gap-2 shrink-0">
-            <Button
-              onClick={onStartNewVisit}
-              size="default"
-              className="flex-1 sm:flex-none shadow-md shadow-emerald-600/20"
-            >
-              <PlusCircle className="h-4 w-4" />
-              <span>ثبت ویزیت جدید</span>
-            </Button>
-            <Button
-              onClick={onEditPatient}
-              variant="outline"
-              size="default"
-              className="flex-1 sm:flex-none"
-            >
-              <Edit className="h-3.5 w-3.5" />
-              <span>ویرایش پرونده</span>
-            </Button>
+            {!isReadOnly && (
+              <Button
+                onClick={onStartNewVisit}
+                size="default"
+                className="flex-1 sm:flex-none shadow-md shadow-emerald-600/20"
+              >
+                <PlusCircle className="h-4 w-4" />
+                <span>ثبت ویزیت جدید</span>
+              </Button>
+            )}
+
+            <div className="flex gap-2">
+              <Button
+                onClick={onEditPatient}
+                variant="outline"
+                size="sm"
+                className="flex-1"
+              >
+                <Edit className="h-3.5 w-3.5" />
+                <span>ویرایش</span>
+              </Button>
+
+              {onOpenShareModal && (
+                <Button
+                  onClick={onOpenShareModal}
+                  variant="outline"
+                  size="sm"
+                  title="اشتراک‌گذاری پرونده با همکار"
+                  className="gap-1 border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-900 dark:text-blue-300 dark:hover:bg-blue-950/40"
+                >
+                  <Share2 className="h-3.5 w-3.5" />
+                  <span>اشتراک</span>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>
