@@ -5,7 +5,7 @@ import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { saveOffice, setActiveOfficeId } from "@/lib/storage";
-import { Building2, MapPin, Phone } from "lucide-react";
+import { Building2 } from "lucide-react";
 
 interface NewOfficeModalProps {
   isOpen: boolean;
@@ -53,13 +53,13 @@ export function NewOfficeModal({
       isOpen={isOpen}
       onClose={onClose}
       title="افزودن مطب یا مرکز درمانی جدید"
-      description="ثبت مطب دوم/سوم برای پزشک یا کلینیک مستقل با تفکیک منشی و بیماران (سند ۰۷)"
+      description="ثبت مطب دوم/سوم برای پزشک یا کلینیک مستقل با تفکیک پذیرش و پرونده‌ها"
       size="md"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-            نام مطب / کلینیک:
+            نام مطب / مرکز درمانی:
           </label>
           <Input
             value={name}
@@ -67,10 +67,11 @@ export function NewOfficeModal({
             placeholder="مثال: مطب سعادت‌آباد..."
             required
             className="text-xs"
+            autoFocus
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
               شهر:
@@ -102,7 +103,7 @@ export function NewOfficeModal({
           <Input
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            placeholder="خیابان، پلاک، طبقه..."
+            placeholder="خیابان، پلاک، طبقه، واحد..."
             className="text-xs"
           />
         </div>
@@ -110,10 +111,11 @@ export function NewOfficeModal({
         <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={onClose}
             disabled={isSubmitting}
+            className="text-xs"
           >
             انصراف
           </Button>
@@ -121,10 +123,10 @@ export function NewOfficeModal({
             type="submit"
             size="sm"
             isLoading={isSubmitting}
-            className="gap-1.5"
+            className="gap-1.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs"
           >
             <Building2 className="h-4 w-4" />
-            <span>ثبت و فعال‌سازی مطب</span>
+            <span>ثبت و انتخاب مطب</span>
           </Button>
         </div>
       </form>

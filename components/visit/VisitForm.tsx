@@ -581,15 +581,16 @@ export function VisitForm({
   return (
     <div className="space-y-6">
       {/* Top Banner: Patient Info, Specialty Switcher, AI Voice, and Stopwatch */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 rounded-3xl border border-slate-200/90 bg-white/90 p-5 shadow-sm backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/90">
+      {/* Top Banner: Patient Info, Specialty Switcher, AI Voice, and Stopwatch */}
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 rounded-3xl border border-slate-200/90 bg-white/90 p-4 sm:p-5 shadow-xs backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/90">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-white font-black shadow-md shadow-emerald-600/30">
-            <Stethoscope className="h-6 w-6" />
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-teal-600 text-white font-bold shadow-xs">
+            <Stethoscope className="h-5 w-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs text-slate-400">بیمار:</span>
-              <h2 className="text-lg font-black text-slate-900 dark:text-slate-100">
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
                 {patient.fullName}
               </h2>
               {patient.age && (
@@ -606,31 +607,18 @@ export function VisitForm({
           </div>
         </div>
 
-        {/* Center: Live Timer & Global AI Voice Button */}
-        <div className="flex items-center gap-3">
+        {/* Center: Global AI Voice Button */}
+        <div className="flex flex-wrap items-center gap-2.5">
           {/* AI Voice Dictation Button (Doc 08 & 09) */}
           <button
             type="button"
             onClick={() => setIsAiModalOpen(true)}
-            className="flex items-center gap-2 rounded-2xl border border-purple-500/20 bg-gradient-to-r from-purple-600 to-indigo-600 px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-purple-600/20 hover:opacity-95 transition-all"
+            className="flex items-center gap-2 rounded-xl border border-teal-600/30 bg-teal-50 px-3.5 py-2 text-xs font-semibold text-teal-900 shadow-2xs hover:bg-teal-100 transition-all dark:border-teal-500/30 dark:bg-teal-950/40 dark:text-teal-200"
           >
-            <Mic className="h-4 w-4 animate-pulse text-amber-300" />
-            <span>ورود صوتی هوش مصنوعی (AI Voice)</span>
-            <span className="rounded bg-white/20 px-1 py-0.2 text-[10px]">🎤 فاز ۲</span>
+            <Mic className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+            <span>ورود صوتی هوش مصنوعی</span>
+            <span className="rounded bg-teal-200/60 dark:bg-teal-900/60 px-1.5 py-0.5 text-[10px] font-mono font-medium">AI Voice</span>
           </button>
-
-          {/* Stopwatch */}
-          <div className="flex items-center gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-3.5 py-2 text-emerald-800 dark:text-emerald-300">
-            <Clock className="h-4 w-4 animate-pulse text-emerald-600 dark:text-emerald-400" />
-            <div className="flex flex-col text-right">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600/80 dark:text-emerald-400/80">
-                مدت زمان ثبت
-              </span>
-              <span className="text-base font-black font-mono">
-                {formatPersianNumber(secondsElapsed)} ثانیه
-              </span>
-            </div>
-          </div>
         </div>
 
         {/* Right: Specialty Toggle */}
@@ -638,9 +626,9 @@ export function VisitForm({
           <button
             type="button"
             onClick={() => setSpecialty("internal")}
-            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
               specialty === "internal"
-                ? "bg-white text-emerald-700 shadow-sm dark:bg-slate-800 dark:text-emerald-400"
+                ? "bg-white text-teal-800 shadow-xs dark:bg-slate-800 dark:text-teal-300"
                 : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
             }`}
           >
@@ -649,9 +637,9 @@ export function VisitForm({
           <button
             type="button"
             onClick={() => setSpecialty("general")}
-            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
               specialty === "general"
-                ? "bg-white text-emerald-700 shadow-sm dark:bg-slate-800 dark:text-emerald-400"
+                ? "bg-white text-teal-800 shadow-xs dark:bg-slate-800 dark:text-teal-300"
                 : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
             }`}
           >
@@ -661,43 +649,43 @@ export function VisitForm({
       </div>
 
       {/* Quick Clinical Presets Strip (One-Click Setup) */}
-      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200/60 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-850/50">
-        <span className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 pl-2">
-          <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200/80 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/50">
+        <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 pl-2">
+          <Sparkles className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
           الگوهای سریع بالینی:
         </span>
         <button
           type="button"
           onClick={applyPresetFluURI}
-          className="rounded-xl border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-2xs hover:border-emerald-500 hover:bg-emerald-50/50 hover:text-emerald-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition-all"
+          className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-2xs hover:border-teal-500 hover:text-teal-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition-all"
         >
           سرماخوردگی / گلودرد حاد (URI)
         </button>
         <button
           type="button"
           onClick={applyPresetHypertension}
-          className="rounded-xl border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-2xs hover:border-emerald-500 hover:bg-emerald-50/50 hover:text-emerald-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition-all"
+          className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-2xs hover:border-teal-500 hover:text-teal-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition-all"
         >
           کنترل فشار خون بالا
         </button>
         <button
           type="button"
           onClick={applyPresetNormalCheckup}
-          className="rounded-xl border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-2xs hover:border-emerald-500 hover:bg-emerald-50/50 hover:text-emerald-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition-all"
+          className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-2xs hover:border-teal-500 hover:text-teal-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 transition-all"
         >
           چکاپ دوره‌ای نرمال
         </button>
       </div>
 
       {/* Navigation Step Tabs */}
-      <div className="flex border-b border-slate-200 dark:border-slate-800 gap-1 overflow-x-auto pb-1">
+      <div className="flex border-b border-slate-200 dark:border-slate-800 gap-1 overflow-x-auto pb-1 scrollbar-thin">
         <button
           type="button"
           onClick={() => setActiveTab("complaint")}
-          className={`flex items-center gap-2 rounded-t-xl px-4 py-2.5 text-xs md:text-sm font-bold transition-all border-b-2 ${
+          className={`flex items-center gap-2 rounded-t-xl px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 whitespace-nowrap ${
             activeTab === "complaint"
-              ? "border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50/30 dark:bg-emerald-950/20"
-              : "border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-400"
+              ? "border-teal-600 text-teal-700 dark:text-teal-400 bg-teal-50/50 dark:bg-teal-950/30"
+              : "border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
           }`}
         >
           <Activity className="h-4 w-4" />
@@ -709,10 +697,10 @@ export function VisitForm({
         <button
           type="button"
           onClick={() => setActiveTab("vitals")}
-          className={`flex items-center gap-2 rounded-t-xl px-4 py-2.5 text-xs md:text-sm font-bold transition-all border-b-2 ${
+          className={`flex items-center gap-2 rounded-t-xl px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 whitespace-nowrap ${
             activeTab === "vitals"
-              ? "border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50/30 dark:bg-emerald-950/20"
-              : "border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-400"
+              ? "border-teal-600 text-teal-700 dark:text-teal-400 bg-teal-50/50 dark:bg-teal-950/30"
+              : "border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
           }`}
         >
           <Heart className="h-4 w-4" />
@@ -722,10 +710,10 @@ export function VisitForm({
         <button
           type="button"
           onClick={() => setActiveTab("exam")}
-          className={`flex items-center gap-2 rounded-t-xl px-4 py-2.5 text-xs md:text-sm font-bold transition-all border-b-2 ${
+          className={`flex items-center gap-2 rounded-t-xl px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 whitespace-nowrap ${
             activeTab === "exam"
-              ? "border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50/30 dark:bg-emerald-950/20"
-              : "border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-400"
+              ? "border-teal-600 text-teal-700 dark:text-teal-400 bg-teal-50/50 dark:bg-teal-950/30"
+              : "border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
           }`}
         >
           <Stethoscope className="h-4 w-4" />
@@ -737,10 +725,10 @@ export function VisitForm({
         <button
           type="button"
           onClick={() => setActiveTab("diagnosis")}
-          className={`flex items-center gap-2 rounded-t-xl px-4 py-2.5 text-xs md:text-sm font-bold transition-all border-b-2 ${
+          className={`flex items-center gap-2 rounded-t-xl px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 whitespace-nowrap ${
             activeTab === "diagnosis"
-              ? "border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50/30 dark:bg-emerald-950/20"
-              : "border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-400"
+              ? "border-teal-600 text-teal-700 dark:text-teal-400 bg-teal-50/50 dark:bg-teal-950/30"
+              : "border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
           }`}
         >
           <CheckCircle2 className="h-4 w-4" />
@@ -752,10 +740,10 @@ export function VisitForm({
         <button
           type="button"
           onClick={() => setActiveTab("plan")}
-          className={`flex items-center gap-2 rounded-t-xl px-4 py-2.5 text-xs md:text-sm font-bold transition-all border-b-2 ${
+          className={`flex items-center gap-2 rounded-t-xl px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold transition-all border-b-2 whitespace-nowrap ${
             activeTab === "plan"
-              ? "border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-emerald-50/30 dark:bg-emerald-950/20"
-              : "border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-400"
+              ? "border-teal-600 text-teal-700 dark:text-teal-400 bg-teal-50/50 dark:bg-teal-950/30"
+              : "border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
           }`}
         >
           <FileEdit className="h-4 w-4" />
@@ -769,9 +757,9 @@ export function VisitForm({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <span>انتخاب سریع یا ورود متن سفارشی شکایت اصلی</span>
-                <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                  Escape Hatch فعال (Doc 09)
+                <span>شکایت اصلی بیمار (Chief Complaint)</span>
+                <span className="text-[11px] font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 dark:text-slate-400 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
+                  ورود پویا و سریع
                 </span>
               </h3>
               <p className="text-xs text-slate-500">
@@ -805,7 +793,7 @@ export function VisitForm({
                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-all ${
                   isLocalDictatingSection === "cc"
                     ? "border-red-500 bg-red-50 text-red-600 animate-pulse"
-                    : "border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300"
+                    : "border-slate-200 bg-slate-50 text-slate-700 hover:border-teal-500 hover:bg-teal-50 hover:text-teal-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300"
                 }`}
               >
                 <Mic className="h-4 w-4" />
@@ -827,22 +815,22 @@ export function VisitForm({
 
           {/* Active Custom Chips (Doc 09) */}
           {customCc.length > 0 && (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-3 dark:border-amber-900/40 dark:bg-amber-950/20 space-y-1.5">
-              <span className="text-[11px] font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1">
-                <Tag className="h-3.5 w-3.5 text-amber-600" />
+            <div className="rounded-2xl border border-teal-200/70 bg-teal-50/40 p-3 dark:border-teal-900/40 dark:bg-teal-950/20 space-y-1.5">
+              <span className="text-[11px] font-bold text-teal-950 dark:text-teal-300 flex items-center gap-1">
+                <Tag className="h-3.5 w-3.5 text-teal-600" />
                 شکایت‌های اختصاصی ثبت‌شده (متن آزاد / دیکته صوتی):
               </span>
               <div className="flex flex-wrap gap-2">
                 {customCc.map((txt) => (
                   <div
                     key={txt}
-                    className="flex items-center gap-1.5 rounded-xl border border-amber-300 bg-white px-3 py-1 text-xs font-bold text-amber-900 shadow-2xs dark:border-amber-800 dark:bg-slate-900 dark:text-amber-200"
+                    className="flex items-center gap-1.5 rounded-xl border border-teal-300 bg-white px-3 py-1 text-xs font-bold text-teal-950 shadow-2xs dark:border-teal-800 dark:bg-slate-900 dark:text-teal-200"
                   >
                     <span>{txt}</span>
                     <button
                       type="button"
                       onClick={() => removeCustomCc(txt)}
-                      className="text-amber-600 hover:text-red-600"
+                      className="text-slate-400 hover:text-red-600 transition-colors"
                     >
                       <Trash2 className="h-3 w-3" />
                     </button>
@@ -864,7 +852,7 @@ export function VisitForm({
                   }
                   className={`flex items-center justify-between rounded-2xl border p-3.5 cursor-pointer transition-all duration-150 ${
                     isSelected
-                      ? "border-emerald-500 bg-emerald-50/90 text-emerald-950 shadow-sm dark:bg-emerald-950/40 dark:text-emerald-200"
+                      ? "border-teal-500 bg-teal-50/80 text-teal-950 shadow-xs dark:bg-teal-950/40 dark:text-teal-200"
                       : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:bg-slate-800"
                   }`}
                 >
@@ -874,7 +862,7 @@ export function VisitForm({
                   <div
                     className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-lg border transition-colors ${
                       isSelected
-                        ? "border-emerald-600 bg-emerald-600 text-white"
+                        ? "border-teal-600 bg-teal-600 text-white"
                         : "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-800"
                     }`}
                   >
@@ -1031,7 +1019,7 @@ export function VisitForm({
             <div className="rounded-2xl border border-slate-200/80 p-4 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-850/40">
               <div className="flex items-center justify-between mb-2">
                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                  <Droplet className="h-4 w-4 text-indigo-500" />
+                  <Droplet className="h-4 w-4 text-rose-500" />
                   قند خون (BS)
                 </label>
                 {bsEvaluation && (
@@ -1117,8 +1105,8 @@ export function VisitForm({
             <div>
               <h3 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <span>یافته‌های معاینه بالینی (معاینات استاندارد + یادداشت اختصاصی)</span>
-                <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                  Item Modifiers فعال (Doc 09)
+                <span className="text-[11px] font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 dark:text-slate-400 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
+                  یادداشت تکمیلی
                 </span>
               </h3>
               <p className="text-xs text-slate-500">
@@ -1152,7 +1140,7 @@ export function VisitForm({
                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-all ${
                   isLocalDictatingSection === "pe"
                     ? "border-red-500 bg-red-50 text-red-600 animate-pulse"
-                    : "border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300"
+                    : "border-slate-200 bg-slate-50 text-slate-700 hover:border-teal-500 hover:bg-teal-50 hover:text-teal-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300"
                 }`}
               >
                 <Mic className="h-4 w-4" />
@@ -1174,22 +1162,22 @@ export function VisitForm({
 
           {/* Active Custom Chips (Doc 09) */}
           {customPe.length > 0 && (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-3 dark:border-amber-900/40 dark:bg-amber-950/20 space-y-1.5">
-              <span className="text-[11px] font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1">
-                <Tag className="h-3.5 w-3.5 text-amber-600" />
+            <div className="rounded-2xl border border-teal-200/70 bg-teal-50/40 p-3 dark:border-teal-900/40 dark:bg-teal-950/20 space-y-1.5">
+              <span className="text-[11px] font-bold text-teal-950 dark:text-teal-300 flex items-center gap-1">
+                <Tag className="h-3.5 w-3.5 text-teal-600" />
                 یافته‌های اختصاصی خارج از الگو (سفارشی / دیکته صوتی):
               </span>
               <div className="flex flex-wrap gap-2">
                 {customPe.map((txt) => (
                   <div
                     key={txt}
-                    className="flex items-center gap-1.5 rounded-xl border border-amber-300 bg-white px-3 py-1 text-xs font-bold text-amber-900 shadow-2xs dark:border-amber-800 dark:bg-slate-900 dark:text-amber-200"
+                    className="flex items-center gap-1.5 rounded-xl border border-teal-300 bg-white px-3 py-1 text-xs font-bold text-teal-950 shadow-2xs dark:border-teal-800 dark:bg-slate-900 dark:text-teal-200"
                   >
                     <span>{txt}</span>
                     <button
                       type="button"
                       onClick={() => removeCustomPe(txt)}
-                      className="text-amber-600 hover:text-red-600"
+                      className="text-slate-400 hover:text-red-600 transition-colors"
                     >
                       <Trash2 className="h-3 w-3" />
                     </button>
@@ -1202,7 +1190,7 @@ export function VisitForm({
           <div className="space-y-6">
             {Object.entries(examFindingsBySystem).map(([system, items]) => (
               <div key={system} className="space-y-2">
-                <span className="inline-block rounded-lg bg-slate-100 px-3 py-1 text-xs font-black text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                <span className="inline-block rounded-lg bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                   {system}
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -1216,7 +1204,7 @@ export function VisitForm({
                         key={item.id}
                         className={`flex flex-col justify-between rounded-2xl border p-3.5 transition-all duration-150 ${
                           isSelected
-                            ? "border-emerald-500 bg-emerald-50/90 text-emerald-950 shadow-sm dark:bg-emerald-950/40 dark:text-emerald-200"
+                            ? "border-teal-500 bg-teal-50/80 text-teal-950 shadow-xs dark:bg-teal-950/40 dark:text-teal-200"
                             : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:bg-slate-800"
                         }`}
                       >
@@ -1232,7 +1220,7 @@ export function VisitForm({
                           <div
                             className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-lg border transition-colors ${
                               isSelected
-                                ? "border-emerald-600 bg-emerald-600 text-white"
+                                ? "border-teal-600 bg-teal-600 text-white"
                                 : "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-800"
                             }`}
                           >
@@ -1242,7 +1230,7 @@ export function VisitForm({
 
                         {/* Item Modifier Note & Button (Doc 09) */}
                         {isSelected && (
-                          <div className="mt-2.5 pt-2 border-t border-emerald-200/80 dark:border-emerald-900/60">
+                          <div className="mt-2.5 pt-2 border-t border-teal-200/80 dark:border-teal-900/60">
                             {isEditingThisModifier ? (
                               <div className="flex items-center gap-1.5 animate-in fade-in">
                                 <Input
@@ -1267,7 +1255,7 @@ export function VisitForm({
                             ) : (
                               <div className="flex items-center justify-between text-[11px]">
                                 {modifier ? (
-                                  <span className="font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-900/40 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                                  <span className="font-semibold text-teal-800 dark:text-teal-300 bg-teal-100/70 dark:bg-teal-900/40 px-2 py-0.5 rounded-lg flex items-center gap-1">
                                     <MessageSquare className="h-3 w-3" />
                                     {modifier}
                                   </span>
@@ -1281,7 +1269,7 @@ export function VisitForm({
                                     e.stopPropagation();
                                     handleOpenModifier(item.id);
                                   }}
-                                  className="text-emerald-700 dark:text-emerald-400 hover:underline font-bold text-[11px]"
+                                  className="text-teal-700 dark:text-teal-400 hover:underline font-semibold text-[11px]"
                                 >
                                   {modifier ? "ویرایش یادداشت" : "+ افزودن یادداشت (Modifier)"}
                                 </button>
@@ -1323,8 +1311,8 @@ export function VisitForm({
             <div>
               <h3 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <span>تشخیص‌های بالینی استاندارد و تشخیصی سفارشی</span>
-                <span className="text-[11px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-full border border-blue-500/20">
-                  Escape Hatch فعال (Doc 09)
+                <span className="text-[11px] font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 dark:text-slate-400 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-700">
+                  کدگذاری ICD-10
                 </span>
               </h3>
               <p className="text-xs text-slate-500">
@@ -1358,7 +1346,7 @@ export function VisitForm({
                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-all ${
                   isLocalDictatingSection === "dx"
                     ? "border-red-500 bg-red-50 text-red-600 animate-pulse"
-                    : "border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300"
+                    : "border-slate-200 bg-slate-50 text-slate-700 hover:border-teal-500 hover:bg-teal-50 hover:text-teal-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300"
                 }`}
               >
                 <Mic className="h-4 w-4" />
@@ -1380,22 +1368,22 @@ export function VisitForm({
 
           {/* Active Custom Chips (Doc 09) */}
           {customDx.length > 0 && (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-3 dark:border-amber-900/40 dark:bg-amber-950/20 space-y-1.5">
-              <span className="text-[11px] font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1">
-                <Tag className="h-3.5 w-3.5 text-amber-600" />
+            <div className="rounded-2xl border border-teal-200/70 bg-teal-50/40 p-3 dark:border-teal-900/40 dark:bg-teal-950/20 space-y-1.5">
+              <span className="text-[11px] font-bold text-teal-950 dark:text-teal-300 flex items-center gap-1">
+                <Tag className="h-3.5 w-3.5 text-teal-600" />
                 تشخیص‌های سفارشی خارج از الگو (تایپ آزاد / دیکته صوتی):
               </span>
               <div className="flex flex-wrap gap-2">
                 {customDx.map((txt) => (
                   <div
                     key={txt}
-                    className="flex items-center gap-1.5 rounded-xl border border-amber-300 bg-white px-3 py-1 text-xs font-bold text-amber-900 shadow-2xs dark:border-amber-800 dark:bg-slate-900 dark:text-amber-200"
+                    className="flex items-center gap-1.5 rounded-xl border border-teal-300 bg-white px-3 py-1 text-xs font-bold text-teal-950 shadow-2xs dark:border-teal-800 dark:bg-slate-900 dark:text-teal-200"
                   >
                     <span>{txt}</span>
                     <button
                       type="button"
                       onClick={() => removeCustomDx(txt)}
-                      className="text-amber-600 hover:text-red-600"
+                      className="text-slate-400 hover:text-red-600 transition-colors"
                     >
                       <Trash2 className="h-3 w-3" />
                     </button>
@@ -1416,7 +1404,7 @@ export function VisitForm({
                   }
                   className={`flex items-center justify-between rounded-2xl border p-3.5 cursor-pointer transition-all duration-150 ${
                     isSelected
-                      ? "border-blue-500 bg-blue-50/90 text-blue-950 shadow-sm dark:bg-blue-950/40 dark:text-blue-200"
+                      ? "border-teal-500 bg-teal-50/80 text-teal-950 shadow-xs dark:bg-teal-950/40 dark:text-teal-200"
                       : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/80 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:bg-slate-800"
                   }`}
                 >
@@ -1433,7 +1421,7 @@ export function VisitForm({
                   <div
                     className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-lg border transition-colors ${
                       isSelected
-                        ? "border-blue-600 bg-blue-600 text-white"
+                        ? "border-teal-600 bg-teal-600 text-white"
                         : "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-800"
                     }`}
                   >
@@ -1484,15 +1472,15 @@ export function VisitForm({
               value={planNotes}
               onChange={(e) => setPlanNotes(e.target.value)}
               placeholder="مثال:&#10;۱. قرص لوزارتان ۲۵ روزی یک عدد صبح‌ها&#10;۲. رژیم کم‌نمک و ورزش ۳۰ دقیقه روزانه&#10;۳. تکرار آزمایش قند و چربی ۲ ماه آینده"
-              className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 p-4 text-sm leading-relaxed text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-emerald-500/10 dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-100"
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50/50 p-4 text-sm leading-relaxed text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-teal-500/10 dark:border-slate-800 dark:bg-slate-950/60 dark:text-slate-100"
             />
           </div>
 
           {/* Voice transcript badge if recorded */}
           {voiceTranscriptSaved && (
-            <div className="rounded-xl border border-purple-200 bg-purple-50/40 p-3 text-xs text-purple-900 dark:border-purple-900/40 dark:bg-purple-950/20 dark:text-purple-300">
+            <div className="rounded-xl border border-teal-200 bg-teal-50/40 p-3 text-xs text-teal-900 dark:border-teal-900/40 dark:bg-teal-950/20 dark:text-teal-300">
               <span className="font-bold flex items-center gap-1 mb-1">
-                <Mic className="h-3.5 w-3.5 text-purple-600" />
+                <Mic className="h-3.5 w-3.5 text-teal-600" />
                 متن خام دیکته صوتی AI ثبت‌شده:
               </span>
               <p className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-400 font-mono">
@@ -1515,7 +1503,7 @@ export function VisitForm({
               <button
                 type="button"
                 onClick={() => setShowFallback(!showFallback)}
-                className="text-xs font-semibold text-emerald-600"
+                className="text-xs font-semibold text-teal-600 dark:text-teal-400"
               >
                 {showFallback ? "بستن" : "+ افزودن"}
               </button>
@@ -1565,7 +1553,7 @@ export function VisitForm({
                 variant="default"
                 onClick={() => handleSave("finalized")}
                 isLoading={isSubmitting}
-                className="gap-2 shadow-lg shadow-emerald-600/25 px-6"
+                className="gap-2 shadow-sm px-6"
               >
                 <CheckCircle2 className="h-4 w-4" />
                 <span>تایید و ثبت نهایی ویزیت (Finalize)</span>
@@ -1584,9 +1572,9 @@ export function VisitForm({
         size="lg"
       >
         <div className="space-y-4">
-          <div className="rounded-2xl border border-purple-200 bg-purple-50/40 p-4 dark:border-purple-900/40 dark:bg-purple-950/20 space-y-2">
-            <span className="text-xs font-bold text-purple-900 dark:text-purple-300 flex items-center gap-1.5">
-              <Sparkles className="h-4 w-4 text-amber-400" />
+          <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/60 space-y-2">
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+              <Sparkles className="h-4 w-4 text-teal-600 dark:text-teal-400" />
               سناریوهای نمونه بالینی جهت تست یا دیکته مستقیم با میکروفون:
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
@@ -1597,7 +1585,7 @@ export function VisitForm({
                     "بیمار با سردرد شدید ضربان‌دار و حالت تهوع مراجعه کرده. فشار خون ۱۴۰ روی ۹۰، ضربان ۷۸. در معاینه شکم نرم، صدای قلب S1 و S2 نرمال. تشخیص احتمالی میگرن بدون اورا و گاستریت حاد."
                   )
                 }
-                className="text-right p-2.5 rounded-xl border border-purple-200 bg-white hover:border-purple-400 text-[11px] text-slate-800 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 transition-colors"
+                className="text-right p-2.5 rounded-xl border border-slate-200 bg-white hover:border-teal-400 text-[11px] text-slate-800 dark:bg-slate-850 dark:border-slate-700 dark:text-slate-200 transition-colors"
               >
                 <strong>۱. سردرد و فشار خون بالا:</strong> «فشار ۱۴۰/۹۰، شکم نرم، تشخیص میگرن و گاستریت»
               </button>
@@ -1609,7 +1597,7 @@ export function VisitForm({
                     "بیمار با سرفه خلط‌دار، تب و لرز و گلودرد شدید. تب ۳۸.۴، ضربان ۸۸، اکسیژن ۹۷. حلق ملتهب، ریه پاک. تشخیص سرماخوردگی حاد و فارنژیت."
                   )
                 }
-                className="text-right p-2.5 rounded-xl border border-purple-200 bg-white hover:border-purple-400 text-[11px] text-slate-800 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200 transition-colors"
+                className="text-right p-2.5 rounded-xl border border-slate-200 bg-white hover:border-teal-400 text-[11px] text-slate-800 dark:bg-slate-850 dark:border-slate-700 dark:text-slate-200 transition-colors"
               >
                 <strong>۲. عفونت تنفسی حاد:</strong> «تب ۳۸.۴، سرفه، گلودرد، فارنژیت حاد»
               </button>
@@ -1626,16 +1614,16 @@ export function VisitForm({
                 value={aiTranscript}
                 onChange={(e) => setAiTranscript(e.target.value)}
                 placeholder="متن دیکته را اینجا تایپ کنید یا دکمه ضبط صدا را بزنید..."
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
               />
             </div>
           </div>
 
           {/* AI Unmapped Warning explanation (Doc 09) */}
-          <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3 text-[11px] text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300 flex items-start gap-2">
+          <div className="rounded-xl border border-amber-200/80 bg-amber-50/50 p-3 text-[11px] text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300 flex items-start gap-2">
             <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
             <div>
-              <strong>مدیریت عدم نگاشت در AI (Doc 09):</strong> مواردی که با الگوهای استاندارد سیستم تطبیق داده نشوند، حذف نخواهند شد بلکه به صورت <strong>کپسول‌های سفارشی نارنجی‌رنگ (Custom Chips)</strong> در بخش مربوطه درج می‌شوند تا شما تأیید یا ویرایش فرمایید.
+              <strong>مدیریت عدم نگاشت در AI:</strong> مواردی که با الگوهای استاندارد سیستم تطبیق داده نشوند، حذف نخواهند شد بلکه به صورت <strong>کپسول‌های سفارشی</strong> در بخش مربوطه درج می‌شوند تا شما تأیید یا ویرایش فرمایید.
             </div>
           </div>
 
@@ -1654,9 +1642,9 @@ export function VisitForm({
               size="sm"
               onClick={() => applyAiVoiceExtraction(aiTranscript)}
               disabled={!aiTranscript.trim()}
-              className="gap-1.5 bg-purple-600 hover:bg-purple-700 text-white"
+              className="gap-1.5 bg-teal-600 hover:bg-teal-700 text-white"
             >
-              <Sparkles className="h-4 w-4 text-amber-300" />
+              <Sparkles className="h-4 w-4 text-teal-200" />
               <span>پردازش و استخراج هوشمند در فرم</span>
             </Button>
           </div>

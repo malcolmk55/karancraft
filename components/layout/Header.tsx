@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTheme } from "next-themes";
 import { Doctor, MedicalOffice, User } from "@/types/medical";
 import {
   getActiveDoctor,
@@ -32,6 +33,10 @@ import {
   ShieldAlert,
   Plus,
   Check,
+  Menu,
+  X,
+  Laptop,
+  BarChart2,
 } from "lucide-react";
 
 interface HeaderProps {
@@ -67,7 +72,10 @@ export function Header({
 }: HeaderProps) {
   const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
   const [isOfficeMenuOpen, setIsOfficeMenuOpen] = React.useState(false);
-  const [isDarkMode, setIsDarkMode] = React.useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
 
   const [currentUser, setCurrentUser] = React.useState<User>(getActiveUser());
   const [activeOfficeId, setActiveOfficeIdState] = React.useState<string | null>(
@@ -77,19 +85,15 @@ export function Header({
   const users = getUsers();
 
   React.useEffect(() => {
+    setMounted(true);
     setCurrentUser(getActiveUser());
     setActiveOfficeIdState(getActiveOfficeId());
     setAllOffices(getOffices());
   }, []);
 
   const toggleDarkMode = () => {
-    const isDark = !isDarkMode;
-    setIsDarkMode(isDark);
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    if (!mounted) return;
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
   };
 
   const handleSelectUser = (u: User) => {
@@ -111,50 +115,55 @@ export function Header({
     setActiveOfficeId(officeId);
     setActiveOfficeIdState(officeId);
     setIsOfficeMenuOpen(false);
+    setIsMobileMenuOpen(false);
     if (onOfficeChange) onOfficeChange(officeId);
   };
 
   const currentOfficeName = React.useMemo(() => {
-    if (!activeOfficeId) return "همه مطب‌ها (نمای یکپارچه)";
+    if (!activeOfficeId) return "همه مطب‌ها (یکپارچه)";
     const found = allOffices.find((o) => o.id === activeOfficeId);
     return found ? found.name : "مطب اصلی";
   }, [activeOfficeId, allOffices]);
 
+  const isDark = mounted && resolvedTheme === "dark";
+
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/80 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/80">
-      <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-4 sm:px-6">
-        {/* Left: Brand & Status */}
-        <div className="flex items-center gap-3.5">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-600/25">
-            <Stethoscope className="h-6 w-6" />
+    <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/95 transition-colors">
+      <div className="mx-auto flex h-16 sm:h-17 max-w-7xl items-center justify-between px-3 sm:px-6 gap-2">
+        {/* Brand & Office Indicator */}
+        <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+          <div className="flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-teal-600 text-white shadow-md shadow-teal-600/20">
+            <Stethoscope className="h-5 w-5 sm:h-6 sm:w-6" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-black tracking-tight text-slate-900 dark:text-slate-100">
-                مطب هوشمند <span className="text-emerald-600 dark:text-emerald-400 font-mono">MediDoc</span>
+
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-slate-100 truncate">
+                مطب هوشمند <span className="text-teal-600 dark:text-teal-400 font-mono font-bold">MediDoc</span>
               </span>
-              <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+              <span className="hidden sm:inline-flex rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                 نسخه ۲.۰
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              چند مطبی • شبکه پزشکان • پرونده مشترک • هوش مصنوعی
+            <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate hidden xs:block">
+              سامانه پرونده الکترونیک و مدیریت بالینی مطب
             </p>
           </div>
         </div>
 
-        {/* Center: Multi-Office Switcher & Speed Badge */}
-        <div className="hidden md:flex items-center gap-2">
-          {/* Office Switcher Dropdown (Doc 07) */}
+        {/* Center: Desktop Multi-Office Selector & Speed Badge */}
+        <div className="hidden lg:flex items-center gap-2">
+          {/* Office Switcher Dropdown */}
           <div className="relative">
             <button
               type="button"
               onClick={() => setIsOfficeMenuOpen(!isOfficeMenuOpen)}
-              className="flex items-center gap-2 rounded-2xl border border-blue-500/30 bg-blue-50/50 px-3.5 py-1.5 text-xs font-bold text-blue-900 hover:bg-blue-100/70 dark:border-blue-900/60 dark:bg-blue-950/40 dark:text-blue-200 transition-all"
+              className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/80 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
+              title="تغییر مطب فعال"
             >
-              <Building2 className="h-3.5 w-3.5 text-blue-600" />
-              <span>{currentOfficeName}</span>
-              <ChevronDown className="h-3 w-3 text-blue-500" />
+              <Building2 className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
+              <span className="max-w-[140px] truncate">{currentOfficeName}</span>
+              <ChevronDown className="h-3 w-3 text-slate-400" />
             </button>
 
             {isOfficeMenuOpen && (
@@ -166,19 +175,19 @@ export function Header({
                 <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95 duration-150">
                   <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-1 flex items-center justify-between">
                     <span>انتخاب مطب فعال پزشک</span>
-                    <span className="text-[10px] text-blue-600">Doc 07</span>
+                    <span className="text-[10px] text-teal-600 dark:text-teal-400">یکپارچگی اسناد</span>
                   </div>
 
                   <div
                     onClick={() => handleSelectOffice(null)}
                     className={`flex items-center justify-between rounded-xl p-2.5 cursor-pointer text-xs transition-colors ${
                       activeOfficeId === null
-                        ? "bg-blue-50 text-blue-950 dark:bg-blue-950/50 dark:text-blue-100 font-bold"
-                        : "hover:bg-slate-50 dark:hover:bg-slate-800"
+                        ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white font-bold"
+                        : "hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300"
                     }`}
                   >
                     <span>همه مطب‌ها (نمای یکپارچه کلیه بیماران)</span>
-                    {activeOfficeId === null && <Check className="h-3.5 w-3.5 text-blue-600" />}
+                    {activeOfficeId === null && <Check className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />}
                   </div>
 
                   {allOffices.map((off) => {
@@ -189,8 +198,8 @@ export function Header({
                         onClick={() => handleSelectOffice(off.id)}
                         className={`flex items-center justify-between rounded-xl p-2.5 cursor-pointer text-xs transition-colors ${
                           isSelected
-                            ? "bg-blue-50 text-blue-950 dark:bg-blue-950/50 dark:text-blue-100 font-bold"
-                            : "hover:bg-slate-50 dark:hover:bg-slate-800"
+                            ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white font-bold"
+                            : "hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300"
                         }`}
                       >
                         <div>
@@ -199,7 +208,7 @@ export function Header({
                           </p>
                           <p className="text-[10px] text-slate-500">{off.city || "تهران"}</p>
                         </div>
-                        {isSelected && <Check className="h-3.5 w-3.5 text-blue-600" />}
+                        {isSelected && <Check className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />}
                       </div>
                     );
                   })}
@@ -211,7 +220,7 @@ export function Header({
                         setIsOfficeMenuOpen(false);
                         onOpenNewOfficeModal();
                       }}
-                      className="w-full flex items-center justify-center gap-1.5 py-1.5 text-xs font-bold text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-xl transition-colors"
+                      className="w-full flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold text-teal-600 hover:bg-teal-50 dark:text-teal-400 dark:hover:bg-slate-800/60 rounded-xl transition-colors"
                     >
                       <Plus className="h-3.5 w-3.5" />
                       <span>افزودن مطب جدید...</span>
@@ -221,130 +230,128 @@ export function Header({
               </>
             )}
           </div>
-
-          {/* Efficiency Metric Badge */}
-          <button
-            type="button"
-            onClick={onOpenEfficiencyModal}
-            className="flex items-center gap-2 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-3 py-1.5 text-xs font-bold text-amber-800 hover:bg-amber-500/20 dark:text-amber-300 transition-colors"
-          >
-            <Zap className="h-3.5 w-3.5 text-amber-500" />
-            <span>ثبت: {avgDurationSeconds || 24} ثانیه</span>
-          </button>
         </div>
 
-        {/* Right: Actions & Role / User Switcher */}
-        <div className="flex items-center gap-2 sm:gap-2.5">
+        {/* Right: Actions, Theme, Role/User, and Mobile Menu */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Quick Action: New Patient */}
           <Button
             onClick={onOpenNewPatientModal}
             size="sm"
-            className="hidden sm:inline-flex gap-1.5 shadow-md shadow-emerald-600/20"
+            className="gap-1.5 h-9 px-3 text-xs sm:text-sm font-semibold"
           >
-            <UserPlus className="h-4 w-4" />
-            <span>بیمار جدید</span>
+            <UserPlus className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline">بیمار جدید</span>
           </Button>
 
-          {/* Doctor Network & Patient Sharing */}
-          <Button
-            onClick={onOpenNetworkModal}
-            variant="outline"
-            size="sm"
-            title="شبکه پزشکان و پرونده‌های مشترک"
-            className="gap-1.5 text-xs border-slate-200 dark:border-slate-800"
-          >
-            <Share2 className="h-4 w-4 text-emerald-600" />
-            <span className="hidden lg:inline">شبکه و اشتراک</span>
-          </Button>
+          {/* Desktop Toolbar Icons */}
+          <div className="hidden lg:flex items-center gap-1">
+            <Button
+              onClick={onOpenEfficiencyModal}
+              variant="ghost"
+              size="iconSm"
+              title="آمار و شاخص‌های بهره‌وری مطب"
+              className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+            >
+              <BarChart2 className="h-4 w-4" />
+            </Button>
 
-          {/* My Subscription (Doc 08) */}
-          <Button
-            onClick={onOpenSubscriptionModal}
-            variant="outline"
-            size="sm"
-            title="طرح اشتراک و پرداخت"
-            className="gap-1.5 text-xs border-slate-200 dark:border-slate-800"
-          >
-            <Crown className="h-4 w-4 text-amber-500" />
-            <span className="hidden lg:inline">اشتراک من</span>
-          </Button>
+            <Button
+              onClick={onOpenNetworkModal}
+              variant="ghost"
+              size="iconSm"
+              title="شبکه پزشکان و پرونده‌های مشترک"
+              className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+            >
+              <Share2 className="h-4 w-4" />
+            </Button>
 
-          {/* Admin Dashboard (Doc 06) */}
-          <Button
-            onClick={onOpenAdminModal}
-            variant="outline"
-            size="iconSm"
-            title="پنل مدیریت کل سیستم (Admin Console)"
-            className="text-slate-600 dark:text-slate-300"
-          >
-            <ShieldAlert className="h-4 w-4 text-rose-500" />
-          </Button>
+            <Button
+              onClick={onOpenSubscriptionModal}
+              variant="ghost"
+              size="iconSm"
+              title="طرح اشتراک و پرداخت"
+              className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+            >
+              <Crown className="h-4 w-4" />
+            </Button>
 
-          {/* Quick Action: Templates library */}
-          <Button
-            onClick={onOpenTemplateModal}
-            variant="outline"
-            size="iconSm"
-            title="کتابخانه قالب‌های بالینی"
-          >
-            <Layers className="h-4 w-4 text-slate-600 dark:text-slate-300" />
-          </Button>
+            <Button
+              onClick={onOpenTemplateModal}
+              variant="ghost"
+              size="iconSm"
+              title="کتابخانه قالب‌های بالینی"
+              className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+            >
+              <Layers className="h-4 w-4" />
+            </Button>
 
-          {/* Quick Action: Backup & Restore */}
-          <Button
-            onClick={onOpenBackupModal}
-            variant="outline"
-            size="iconSm"
-            title="پشتیبان‌گیری دیتابیس (JSON)"
-          >
-            <Database className="h-4 w-4 text-slate-600 dark:text-slate-300" />
-          </Button>
+            <Button
+              onClick={onOpenBackupModal}
+              variant="ghost"
+              size="iconSm"
+              title="پشتیبان‌گیری داده‌ها (JSON)"
+              className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+            >
+              <Database className="h-4 w-4" />
+            </Button>
 
-          {/* Dark Mode Toggle */}
+            <Button
+              onClick={onOpenAdminModal}
+              variant="ghost"
+              size="iconSm"
+              title="پنل مدیریت کل سیستم (Admin Console)"
+              className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+            >
+              <ShieldAlert className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Theme Toggle Button (Light / Dark) */}
           <Button
+            id="theme-toggle-btn"
             onClick={toggleDarkMode}
             variant="outline"
             size="iconSm"
-            title="تغییر تم"
+            aria-label="تغییر تم تاریک و روشن"
+            title={isDark ? "تغییر به تم روشن" : "تغییر به تم تاریک"}
+            className="border-slate-200 bg-slate-50/50 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/60 dark:hover:bg-slate-800 h-9 w-9"
           >
-            {isDarkMode ? (
-              <Sun className="h-4 w-4 text-amber-400" />
+            {mounted ? (
+              isDark ? (
+                <Sun className="h-4 w-4 text-amber-400 transition-transform rotate-0" />
+              ) : (
+                <Moon className="h-4 w-4 text-slate-700 transition-transform rotate-0" />
+              )
             ) : (
-              <Moon className="h-4 w-4 text-slate-600" />
+              <span className="h-4 w-4 block rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse" />
             )}
           </Button>
 
-          {/* Multi-Role / User Session Switcher (Doc 06) */}
+          {/* Multi-Role / User Switcher */}
           <div className="relative">
             <button
               type="button"
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white p-1.5 pl-3 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 transition-all text-xs"
+              className="flex items-center gap-1.5 sm:gap-2 rounded-xl border border-slate-200 bg-white p-1 sm:pl-2.5 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800/80 transition-all text-xs"
+              title="تغییر نقش کاربری"
             >
-              <div
-                className={`flex h-7 w-7 items-center justify-center rounded-xl font-bold ${
-                  currentUser.role === "admin"
-                    ? "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300"
-                    : currentUser.role === "receptionist"
-                    ? "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300"
-                    : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                }`}
-              >
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 font-bold text-slate-700 dark:bg-slate-700 dark:text-slate-200">
                 <UserIcon className="h-4 w-4" />
               </div>
-              <div className="text-right hidden sm:block">
+              <div className="text-right hidden md:block">
                 <span className="block font-bold text-slate-900 dark:text-slate-100 leading-tight">
                   {currentUser.fullName}
                 </span>
-                <span className="text-[10px] text-slate-500 block leading-tight">
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block leading-tight">
                   {currentUser.role === "admin"
-                    ? "مدیر ارشد سامانه"
+                    ? "مدیر ارشد"
                     : currentUser.role === "receptionist"
-                    ? "منشی مطب ونک"
-                    : "پزشک متخصص"}
+                    ? "منشی مطب"
+                    : "پزشک معالج"}
                 </span>
               </div>
-              <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+              <ChevronDown className="h-3 w-3 text-slate-400" />
             </button>
 
             {isUserMenuOpen && (
@@ -355,8 +362,8 @@ export function Header({
                 />
                 <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95 duration-150">
                   <div className="px-3 py-2 text-[11px] font-bold text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-1 flex items-center justify-between">
-                    <span>سوییچ سریع نقش و کاربر (RBAC)</span>
-                    <span className="text-[10px] text-emerald-600">Doc 06</span>
+                    <span>سوییچ نقش کاربری (RBAC)</span>
+                    <span className="text-[10px] text-teal-600 dark:text-teal-400">مدیریت دسترسی</span>
                   </div>
 
                   {users.map((u) => {
@@ -367,8 +374,8 @@ export function Header({
                         onClick={() => handleSelectUser(u)}
                         className={`flex items-center justify-between rounded-xl p-2.5 cursor-pointer text-xs transition-colors ${
                           isSelected
-                            ? "bg-emerald-50 text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100 font-bold"
-                            : "hover:bg-slate-50 dark:hover:bg-slate-800"
+                            ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white font-bold"
+                            : "hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-300"
                         }`}
                       >
                         <div>
@@ -377,14 +384,14 @@ export function Header({
                           </p>
                           <p className="text-[10px] text-slate-500">
                             {u.role === "admin"
-                              ? "ادمین کل سیستم (دسترسی کامل)"
+                              ? "مدیر ارشد سامانه (دسترسی کامل)"
                               : u.role === "doctor"
-                              ? "پزشک معالج (ثبت ویزیت و پرونده)"
-                              : "منشی مطب (پذیرش و اطلاعات پایه)"}
+                              ? "پزشک معالج (ثبت ویزیت و بالینی)"
+                              : "منشی مطب (پذیرش و تشکیل پرونده)"}
                           </p>
                         </div>
                         {isSelected && (
-                          <div className="h-2 w-2 rounded-full bg-emerald-600" />
+                          <div className="h-2 w-2 rounded-full bg-teal-600 dark:bg-teal-400" />
                         )}
                       </div>
                     );
@@ -393,8 +400,149 @@ export function Header({
               </>
             )}
           </div>
+
+          {/* Mobile & Tablet Menu Toggle Button */}
+          <div className="lg:hidden">
+            <Button
+              variant="outline"
+              size="iconSm"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="border-slate-200 bg-slate-50/50 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/60 dark:hover:bg-slate-800 h-9 w-9"
+              aria-label="منوی ابزارها"
+            >
+              {isMobileMenuOpen ? (
+                <X className="h-4 w-4" />
+              ) : (
+                <Menu className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
         </div>
       </div>
+
+      {/* Mobile & Tablet Drawer Panel */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden border-t border-slate-200 bg-white/98 dark:border-slate-800 dark:bg-slate-900/98 px-4 py-4 space-y-4 animate-in slide-in-from-top-2 duration-150 shadow-lg">
+          {/* Active Office Mobile Switcher */}
+          <div className="space-y-1.5">
+            <span className="text-[11px] font-bold text-slate-400 block">
+              مطب فعال فعلی:
+            </span>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => handleSelectOffice(null)}
+                className={`rounded-xl px-3 py-1.5 text-xs font-semibold border transition-colors ${
+                  activeOfficeId === null
+                    ? "bg-teal-600 text-white border-teal-600"
+                    : "border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                }`}
+              >
+                همه مطب‌ها (یکپارچه)
+              </button>
+              {allOffices.map((off) => (
+                <button
+                  key={off.id}
+                  type="button"
+                  onClick={() => handleSelectOffice(off.id)}
+                  className={`rounded-xl px-3 py-1.5 text-xs font-semibold border transition-colors ${
+                    activeOfficeId === off.id
+                      ? "bg-teal-600 text-white border-teal-600"
+                      : "border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                  }`}
+                >
+                  {off.name}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  onOpenNewOfficeModal();
+                }}
+                className="rounded-xl px-3 py-1.5 text-xs font-semibold border border-dashed border-teal-600/50 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-slate-800/60"
+              >
+                + مطب جدید
+              </button>
+            </div>
+          </div>
+
+          {/* Tools Grid */}
+          <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                onOpenEfficiencyModal();
+              }}
+              className="flex items-center gap-2 rounded-xl p-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 text-right"
+            >
+              <BarChart2 className="h-4 w-4 text-teal-600 dark:text-teal-400 shrink-0" />
+              <span>بهره‌وری مطب</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                onOpenNetworkModal();
+              }}
+              className="flex items-center gap-2 rounded-xl p-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 text-right"
+            >
+              <Share2 className="h-4 w-4 text-teal-600 dark:text-teal-400 shrink-0" />
+              <span>شبکه پزشکان</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                onOpenSubscriptionModal();
+              }}
+              className="flex items-center gap-2 rounded-xl p-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 text-right"
+            >
+              <Crown className="h-4 w-4 text-amber-500 shrink-0" />
+              <span>طرح اشتراک</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                onOpenTemplateModal();
+              }}
+              className="flex items-center gap-2 rounded-xl p-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 text-right"
+            >
+              <Layers className="h-4 w-4 text-slate-600 dark:text-slate-400 shrink-0" />
+              <span>قالب‌های بالینی</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                onOpenBackupModal();
+              }}
+              className="flex items-center gap-2 rounded-xl p-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60 text-right"
+            >
+              <Database className="h-4 w-4 text-slate-600 dark:text-slate-400 shrink-0" />
+              <span>پشتیبان‌گیری</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                onOpenAdminModal();
+              }}
+              className="col-span-2 flex items-center justify-center gap-2 rounded-xl p-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/60"
+            >
+              <ShieldAlert className="h-4 w-4 text-rose-500 shrink-0" />
+              <span>کنسول مدیریت سامانه (Admin)</span>
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

@@ -44,13 +44,13 @@ export function PatientTimeline({
 
   if (visits.length === 0) {
     return (
-      <div className="rounded-3xl border border-dashed border-slate-300 p-12 text-center dark:border-slate-800">
-        <Stethoscope className="mx-auto h-12 w-12 text-slate-300 dark:text-slate-600 mb-3" />
-        <h4 className="text-base font-bold text-slate-700 dark:text-slate-300">
+      <div className="rounded-2xl sm:rounded-3xl border border-dashed border-slate-300 p-8 sm:p-12 text-center dark:border-slate-800">
+        <Stethoscope className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-slate-300 dark:text-slate-600 mb-3" />
+        <h4 className="text-sm sm:text-base font-bold text-slate-700 dark:text-slate-300">
           هنوز هیچ ویزیتی برای این بیمار ثبت نشده است
         </h4>
         <p className="mt-1 text-xs text-slate-500">
-          برای شروع، بر روی دکمه «ثبت ویزیت جدید» کلیک کنید.
+          برای ثبت اولین ویزیت، بر روی دکمه «ثبت ویزیت جدید» کلیک فرمایید.
         </p>
       </div>
     );
@@ -59,14 +59,14 @@ export function PatientTimeline({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between pb-1">
-        <h3 className="flex items-center gap-2 text-base font-black text-slate-900 dark:text-slate-100">
-          <Calendar className="h-4 w-4 text-emerald-600" />
-          <span>خط زمانی مراجعات و ویزیت‌ها ({formatPersianNumber(visits.length)})</span>
+        <h3 className="flex items-center gap-2 text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
+          <Calendar className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+          <span>خط زمانی مراجعات ({formatPersianNumber(visits.length)} ویزیت)</span>
         </h3>
-        <span className="text-xs text-slate-400">به ترتیب از جدیدترین به قدیمی‌ترین</span>
+        <span className="text-xs text-slate-400">جدیدترین به قدیمی‌ترین</span>
       </div>
 
-      <div className="relative border-r-2 border-slate-200 pr-5 mr-3 space-y-6 dark:border-slate-800">
+      <div className="relative border-r-2 border-slate-200 pr-4 sm:pr-5 mr-2 sm:mr-3 space-y-4 sm:space-y-6 dark:border-slate-800">
         {visits.map((visit) => {
           const isExpanded = expandedVisitId === visit.id;
           const isDraft = visit.status === "draft";
@@ -80,33 +80,33 @@ export function PatientTimeline({
             <div key={visit.id} className="relative group">
               {/* Timeline dot */}
               <div
-                className={`absolute -right-[27px] top-4.5 h-3.5 w-3.5 rounded-full border-2 border-white dark:border-slate-950 transition-transform group-hover:scale-125 ${
+                className={`absolute -right-[23px] sm:-right-[27px] top-4.5 h-3 sm:h-3.5 w-3 sm:w-3.5 rounded-full border-2 border-white dark:border-slate-950 transition-transform group-hover:scale-125 ${
                   isDraft
-                    ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]"
-                    : "bg-emerald-600 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                    ? "bg-amber-500"
+                    : "bg-teal-600 dark:bg-teal-400"
                 }`}
               />
 
               <div
-                className={`overflow-hidden rounded-2xl border transition-all duration-200 ${
+                className={`overflow-hidden rounded-xl sm:rounded-2xl border transition-all duration-150 ${
                   isDraft
-                    ? "border-amber-200 bg-amber-50/20 dark:border-amber-900/40 dark:bg-amber-950/10"
-                    : "border-slate-200 bg-white/90 shadow-sm hover:shadow-md dark:border-slate-800 dark:bg-slate-900/90"
+                    ? "border-amber-200/90 bg-amber-50/15 dark:border-amber-900/40 dark:bg-amber-950/10"
+                    : "border-slate-200/90 bg-white/95 dark:border-slate-800 dark:bg-slate-900/95 shadow-sm"
                 }`}
               >
                 {/* Header (Always Visible) */}
                 <div
                   onClick={() => toggleExpand(visit.id)}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 cursor-pointer hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 p-3.5 sm:p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
                 >
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    <span className="font-mono text-sm font-black text-slate-900 dark:text-slate-100">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+                    <span className="font-mono text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
                       {visit.visitDate}
                     </span>
 
                     <Badge
-                      variant={isDraft ? "amber" : "emerald"}
-                      className="gap-1 font-bold text-[11px]"
+                      variant={isDraft ? "amber" : "secondary"}
+                      className="gap-1 font-semibold text-[10px] sm:text-[11px]"
                     >
                       {isDraft ? (
                         <>
@@ -115,13 +115,13 @@ export function PatientTimeline({
                         </>
                       ) : (
                         <>
-                          <FileCheck2 className="h-3 w-3" />
+                          <FileCheck2 className="h-3 w-3 text-teal-600 dark:text-teal-400" />
                           <span>تایید نهایی</span>
                         </>
                       )}
                     </Badge>
 
-                    <Badge variant="secondary" className="text-[11px]">
+                    <Badge variant="outline" className="text-[10px] sm:text-[11px] border-slate-200 dark:border-slate-700">
                       {visit.specialty === "internal" ? "داخلی" : "عمومی"}
                     </Badge>
 
@@ -129,24 +129,15 @@ export function PatientTimeline({
                       <User className="h-3 w-3 text-slate-400" />
                       {visit.doctorName}
                     </span>
-
-                    {visit.durationSeconds > 0 && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
-                        <Zap className="h-2.5 w-2.5 text-emerald-500" />
-                        ثبت در {formatPersianNumber(visit.durationSeconds)} ثانیه
-                      </span>
-                    )}
                   </div>
 
-                  <div className="flex items-center gap-2 self-end sm:self-auto">
-                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                      <span>{isExpanded ? "بستن جزئیات" : "مشاهده خلاصه"}</span>
-                      {isExpanded ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
-                      )}
-                    </div>
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500 self-end sm:self-auto">
+                    <span>{isExpanded ? "بستن جزئیات" : "مشاهده خلاصه"}</span>
+                    {isExpanded ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
                   </div>
                 </div>
 
@@ -156,14 +147,14 @@ export function PatientTimeline({
                     {/* Chief Complaints */}
                     {visit.chiefComplaintsText && visit.chiefComplaintsText.length > 0 && (
                       <div>
-                        <span className="block text-xs font-bold text-slate-400 mb-1.5">
+                        <span className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
                           شکایت اصلی بیمار (Chief Complaint)
                         </span>
                         <div className="flex flex-wrap gap-1.5">
                           {visit.chiefComplaintsText.map((cc, i) => (
                             <span
                               key={i}
-                              className="rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40"
+                              className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-800 dark:bg-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700"
                             >
                               {cc}
                             </span>
@@ -172,14 +163,14 @@ export function PatientTimeline({
                       </div>
                     )}
 
-                    {/* Vitals Summary Pill Strip */}
+                    {/* Vitals Summary Strip */}
                     <div>
-                      <span className="block text-xs font-bold text-slate-400 mb-1.5">
-                        علائم حیاتی ثبت‌شده (Vitals)
+                      <span className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
+                        علائم حیاتی ثبت‌شده
                       </span>
                       <div className="flex flex-wrap gap-2 text-xs">
                         {visit.vitals.systolicBp && (
-                          <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 dark:border-slate-800 dark:bg-slate-800/60 font-mono">
+                          <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 py-1.5 dark:border-slate-700 dark:bg-slate-800/60 font-mono">
                             <span className="text-slate-400">BP:</span>
                             <span className="font-bold text-slate-900 dark:text-slate-100">
                               {formatPersianNumber(visit.vitals.systolicBp)}/
@@ -196,7 +187,7 @@ export function PatientTimeline({
                         )}
 
                         {visit.vitals.pulse && (
-                          <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 dark:border-slate-800 dark:bg-slate-800/60 font-mono">
+                          <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 py-1.5 dark:border-slate-700 dark:bg-slate-800/60 font-mono">
                             <span className="text-slate-400">HR:</span>
                             <span className="font-bold text-slate-900 dark:text-slate-100">
                               {formatPersianNumber(visit.vitals.pulse)} bpm
@@ -205,7 +196,7 @@ export function PatientTimeline({
                         )}
 
                         {visit.vitals.temperature && (
-                          <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 dark:border-slate-800 dark:bg-slate-800/60 font-mono">
+                          <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 py-1.5 dark:border-slate-700 dark:bg-slate-800/60 font-mono">
                             <span className="text-slate-400">Temp:</span>
                             <span className="font-bold text-slate-900 dark:text-slate-100">
                               {formatPersianNumber(visit.vitals.temperature)}°C
@@ -221,7 +212,7 @@ export function PatientTimeline({
                         )}
 
                         {visit.vitals.spo2 && (
-                          <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 dark:border-slate-800 dark:bg-slate-800/60 font-mono">
+                          <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 py-1.5 dark:border-slate-700 dark:bg-slate-800/60 font-mono">
                             <span className="text-slate-400">SpO2:</span>
                             <span className="font-bold text-slate-900 dark:text-slate-100">
                               {formatPersianNumber(visit.vitals.spo2)}%
@@ -230,7 +221,7 @@ export function PatientTimeline({
                         )}
 
                         {visit.vitals.bloodGlucose && (
-                          <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 dark:border-slate-800 dark:bg-slate-800/60 font-mono">
+                          <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 py-1.5 dark:border-slate-700 dark:bg-slate-800/60 font-mono">
                             <span className="text-slate-400">BS:</span>
                             <span className="font-bold text-slate-900 dark:text-slate-100">
                               {formatPersianNumber(visit.vitals.bloodGlucose)} mg/dL
@@ -239,7 +230,7 @@ export function PatientTimeline({
                         )}
 
                         {visit.vitals.weight && (
-                          <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 dark:border-slate-800 dark:bg-slate-800/60 font-mono">
+                          <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/70 px-2.5 py-1.5 dark:border-slate-700 dark:bg-slate-800/60 font-mono">
                             <span className="text-slate-400">Weight:</span>
                             <span className="font-bold text-slate-900 dark:text-slate-100">
                               {formatPersianNumber(visit.vitals.weight)} kg
@@ -257,8 +248,8 @@ export function PatientTimeline({
                     {/* Physical Exam Findings */}
                     {visit.examFindingsText && visit.examFindingsText.length > 0 && (
                       <div>
-                        <span className="block text-xs font-bold text-slate-400 mb-1.5">
-                          یافته‌های معاینه فیزیکی (Physical Examination)
+                        <span className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
+                          معاینه فیزیکی (Physical Exam)
                         </span>
                         <ul className="list-disc list-inside space-y-1 text-xs text-slate-700 dark:text-slate-300">
                           {visit.examFindingsText.map((pe, i) => (
@@ -271,14 +262,14 @@ export function PatientTimeline({
                     {/* Diagnoses */}
                     {visit.diagnosesText && visit.diagnosesText.length > 0 && (
                       <div>
-                        <span className="block text-xs font-bold text-slate-400 mb-1.5">
-                          تشخیص بالینی (Assessment & Diagnosis)
+                        <span className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
+                          تشخیص بالینی (Diagnosis)
                         </span>
                         <div className="flex flex-wrap gap-1.5">
                           {visit.diagnosesText.map((dx, i) => (
                             <span
                               key={i}
-                              className="rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-800 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800/40"
+                              className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-900 dark:bg-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700"
                             >
                               {dx}
                             </span>
@@ -289,9 +280,9 @@ export function PatientTimeline({
 
                     {/* Plan Notes */}
                     {visit.planNotes && (
-                      <div className="rounded-xl bg-slate-50 p-3.5 dark:bg-slate-850 border border-slate-200/70 dark:border-slate-800">
-                        <span className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">
-                          طرح درمان و توصیه‌ها (Plan & Prescription)
+                      <div className="rounded-xl bg-slate-50 p-3.5 dark:bg-slate-850 border border-slate-200/80 dark:border-slate-800">
+                        <span className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+                          طرح درمان و توصیه‌ها (Plan)
                         </span>
                         <p className="whitespace-pre-line text-xs font-medium leading-relaxed text-slate-800 dark:text-slate-200">
                           {visit.planNotes}
@@ -299,38 +290,28 @@ export function PatientTimeline({
                       </div>
                     )}
 
-                    {/* Free Text Fallback Warning (if any) */}
-                    {visit.freeTextFallback && (
-                      <div className="rounded-xl bg-amber-500/10 p-3 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300">
-                        <span className="font-bold block mb-0.5">
-                          یادداشت تکمیلی خارج از قالب (Fallback Note):
-                        </span>
-                        <p>{visit.freeTextFallback}</p>
-                      </div>
-                    )}
-
                     {/* Actions Strip */}
                     <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                       <div className="text-[11px] text-slate-400">
-                        شناسه ویزیت: <span className="font-mono">{visit.id}</span>
+                        شناسه: <span className="font-mono">{visit.id}</span>
                       </div>
 
                       <div className="flex items-center gap-2">
                         {isDraft && (
                           <Button
                             size="sm"
-                            variant="default"
                             onClick={() => onEditDraftVisit(visit)}
-                            className="bg-amber-600 hover:bg-amber-700"
+                            className="bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs"
                           >
                             <FileEdit className="h-3.5 w-3.5" />
-                            تکمیل و نهایی‌سازی پیش‌نویس
+                            تکمیل پیش‌نویس
                           </Button>
                         )}
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => onSelectVisit(visit)}
+                          className="border-slate-200 text-slate-700 dark:border-slate-700 dark:text-slate-300 text-xs"
                         >
                           <Eye className="h-3.5 w-3.5" />
                           مشاهده کامل
@@ -339,9 +320,10 @@ export function PatientTimeline({
                           size="sm"
                           variant="ghost"
                           onClick={() => onPrintVisit(visit)}
+                          className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 text-xs"
                         >
                           <Printer className="h-3.5 w-3.5" />
-                          چاپ خلاصه
+                          چاپ
                         </Button>
                       </div>
                     </div>

@@ -23,12 +23,7 @@ import {
   Share2,
   Users,
   Check,
-  ShieldCheck,
   Trash2,
-  Stethoscope,
-  Info,
-  Lock,
-  FileText,
 } from "lucide-react";
 
 interface SharePatientModalProps {
@@ -116,14 +111,14 @@ export function SharePatientModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`اشتراک‌گذاری پرونده بالینی: ${patient.fullName}`}
-      description="ارجاع تخصصی، مشاوره همکار، و انتقال پرونده با حفظ مالکیت و رعایت محرمانگی (سند ۰۷)"
+      title={`اشتراک‌گذاری پرونده: ${patient.fullName}`}
+      description="ارجاع تخصصی، مشاوره همکار و انتقال پرونده با رعایت استانداردهای محرمانگی"
       size="lg"
     >
-      <div className="space-y-6">
+      <div className="space-y-5">
         {/* Active shares list */}
         {activeShares.length > 0 && (
-          <div className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+          <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-900/60">
             <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300">
               اشتراک‌گذاری‌های فعال برای این بیمار:
             </h4>
@@ -151,7 +146,7 @@ export function SharePatientModal({
                     variant="ghost"
                     size="sm"
                     onClick={() => handleRevoke(share.id)}
-                    className="text-red-600 hover:bg-red-50 text-xs h-8 gap-1"
+                    className="text-rose-600 hover:bg-rose-50 text-xs h-8 gap-1"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                     <span>لغو دسترسی</span>
@@ -164,13 +159,13 @@ export function SharePatientModal({
 
         {/* Share Form */}
         {connectedDoctors.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-amber-300 bg-amber-50/50 p-6 text-center dark:border-amber-900/40 dark:bg-amber-950/20">
+          <div className="rounded-xl border border-dashed border-amber-300 bg-amber-50/40 p-6 text-center dark:border-amber-900/40 dark:bg-amber-950/20">
             <Users className="mx-auto h-8 w-8 text-amber-500 mb-2" />
             <h4 className="text-xs font-bold text-amber-900 dark:text-amber-200">
               هیچ همکار متصلی در شبکه شما وجود ندارد
             </h4>
             <p className="mt-1 text-[11px] text-amber-700 dark:text-amber-400 max-w-sm mx-auto">
-              اشتراک‌گذاری پرونده بیمار فقط با پزشکانی ممکن است که ارتباط کاری پذیرفته‌شده (Accepted) با شما دارند. ابتدا از بخش «شبکه پزشکان» به همکار خود متصل شوید.
+              اشتراک‌گذاری پرونده بیمار فقط با پزشکانی ممکن است که ارتباط کاری پذیرفته‌شده با شما دارند. ابتدا از منوی شبکه همکاران درخواست اتصال ارسال نمایید.
             </p>
           </div>
         ) : (
@@ -183,7 +178,7 @@ export function SharePatientModal({
               <select
                 value={selectedDoctorId}
                 onChange={(e) => setSelectedDoctorId(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
               >
                 {connectedDoctors.map((doc) => (
                   <option key={doc.id} value={doc.id}>
@@ -198,34 +193,34 @@ export function SharePatientModal({
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                 سطح دسترسی همکار:
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={() => setAccessLevel("read_only")}
-                  className={`flex flex-col items-start rounded-2xl border p-3 text-right transition-all ${
+                  className={`flex flex-col items-start rounded-xl border p-3 text-right transition-all ${
                     accessLevel === "read_only"
-                      ? "border-emerald-600 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-950 dark:text-emerald-100 font-bold"
+                      ? "border-teal-600 bg-teal-50/50 dark:bg-teal-950/30 text-teal-950 dark:text-teal-100 font-bold ring-1 ring-teal-600"
                       : "border-slate-200 hover:border-slate-300 dark:border-slate-800 text-slate-700 dark:text-slate-300"
                   }`}
                 >
                   <span className="text-xs font-bold">فقط‌خواندنی (Read-Only)</span>
                   <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
-                    مشاهده سوابق ویزیت‌ها و شرح حال بیمار بدون امکان ثبت ویزیت جدید
+                    مشاهده سوابق ویزیت‌ها بدون امکان ثبت ویزیت جدید
                   </span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setAccessLevel("read_write")}
-                  className={`flex flex-col items-start rounded-2xl border p-3 text-right transition-all ${
+                  className={`flex flex-col items-start rounded-xl border p-3 text-right transition-all ${
                     accessLevel === "read_write"
-                      ? "border-emerald-600 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-950 dark:text-emerald-100 font-bold"
+                      ? "border-teal-600 bg-teal-50/50 dark:bg-teal-950/30 text-teal-950 dark:text-teal-100 font-bold ring-1 ring-teal-600"
                       : "border-slate-200 hover:border-slate-300 dark:border-slate-800 text-slate-700 dark:text-slate-300"
                   }`}
                 >
                   <span className="text-xs font-bold">خواندن و ثبت ویزیت (Read/Write)</span>
                   <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
-                    امکان مشاهده سوابق و ثبت ویزیت‌های جدید با برچسب و نام پزشک همکار
+                    امکان مشاهده سوابق و ثبت ویزیت‌های تکمیلی
                   </span>
                 </button>
               </div>
@@ -240,8 +235,8 @@ export function SharePatientModal({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={2}
-                placeholder="مثال: بیمار به دلیل افت هموگلوبین و مشکوک به خونریزی گوارشی جهت آندوسکوپی خدمتتان معرفی می‌گردد..."
-                className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                placeholder="توضیح کوتاه راجع به علت مشاوره یا ارجاع..."
+                className="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
               />
             </div>
 
@@ -252,25 +247,25 @@ export function SharePatientModal({
                 id="consentCheck"
                 checked={patientConsent}
                 onChange={(e) => setPatientConsent(e.target.checked)}
-                className="h-4 w-4 rounded text-emerald-600 focus:ring-emerald-500"
+                className="h-4 w-4 rounded text-teal-600 focus:ring-teal-500"
               />
               <label htmlFor="consentCheck" className="text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
-                <strong>رضایت بیمار:</strong> بیمار از اشتراک اطلاعات پرونده بالینی با پزشک معتمد مطلع بوده و رضایت شفاهی یا کتبی خود را اعلام نموده است.
+                <strong>رضایت بیمار:</strong> بیمار از اشتراک سوابق پرونده بالینی با پزشک معتمد مطلع است.
               </label>
             </div>
 
             <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-              <Button variant="outline" size="sm" onClick={onClose}>
+              <Button variant="ghost" size="sm" onClick={onClose} className="text-xs">
                 انصراف
               </Button>
               <Button
                 size="sm"
                 onClick={handleShare}
                 disabled={isSubmitting || !selectedDoctorId}
-                className="gap-1.5"
+                className="gap-1.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs"
               >
                 <Share2 className="h-4 w-4" />
-                <span>تأیید و اشتراک‌گذاری پرونده</span>
+                <span>تأیید و اشتراک پرونده</span>
               </Button>
             </div>
           </div>

@@ -1,11 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { Search, UserPlus, Phone, CreditCard, ChevronLeft, Clock, Activity } from "lucide-react";
+import { Search, UserPlus, Phone, CreditCard, ChevronLeft, Clock, Activity, X } from "lucide-react";
 import { Patient } from "@/types/medical";
 import { searchPatients } from "@/lib/storage";
 import { formatPersianNumber } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { PatientAvatar } from "@/components/patient/PatientAvatar";
 
 interface PatientSearchProps {
   onSelectPatient: (patient: Patient) => void;
@@ -25,7 +26,12 @@ export function PatientSearch({
   // Keyboard shortcut Ctrl+K or '/' to focus search
   React.useEffect(() => {
     const handleGlobalKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey && e.key === "k") || (e.key === "/" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA")) {
+      if (
+        (e.ctrlKey && e.key === "k") ||
+        (e.key === "/" &&
+          document.activeElement?.tagName !== "INPUT" &&
+          document.activeElement?.tagName !== "TEXTAREA")
+      ) {
         e.preventDefault();
         searchInputRef.current?.focus();
         searchInputRef.current?.select();
@@ -36,15 +42,9 @@ export function PatientSearch({
   }, []);
 
   React.useEffect(() => {
-    const searchStartTime = performance.now();
     const matches = searchPatients(query);
     setResults(matches);
     setSelectedIndex(-1);
-    const searchDuration = performance.now() - searchStartTime;
-    // Log performance internally ensuring < 1s requirement
-    if (searchDuration > 100) {
-      console.warn(`Patient search took ${searchDuration.toFixed(1)}ms`);
-    }
   }, [query]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -72,7 +72,7 @@ export function PatientSearch({
   return (
     <div className="relative w-full">
       <div className="relative flex items-center">
-        <div className="pointer-events-none absolute right-4 text-emerald-600 dark:text-emerald-400">
+        <div className="pointer-events-none absolute right-3.5 text-teal-600 dark:text-teal-400">
           <Search className="h-5 w-5" />
         </div>
         <input
@@ -82,20 +82,36 @@ export function PatientSearch({
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onKeyDown={handleKeyDown}
-          placeholder="جست‌وجوی فوری بیمار بر اساس نام، کدملی، شماره تماس... (کلید میانبر / یا Ctrl+K)"
-          className="h-13 w-full rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md pr-12 pl-28 text-sm md:text-base font-medium text-slate-900 shadow-lg shadow-slate-100/70 transition-all duration-200 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 dark:border-slate-800 dark:bg-slate-900/95 dark:text-slate-100 dark:shadow-none dark:placeholder:text-slate-500 dark:focus:border-emerald-500"
+          placeholder="جست‌وجوی فوری بیمار (نام، کدملی، تماس)..."
+          className="h-12 sm:h-13 w-full rounded-2xl border border-slate-200/90 bg-white/95 backdrop-blur-md pr-11 pl-20 sm:pl-28 text-sm md:text-base font-medium text-slate-900 shadow-sm transition-all placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-4 focus:ring-teal-500/10 dark:border-slate-800 dark:bg-slate-900/95 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-teal-500"
         />
-        <div className="absolute left-3 flex items-center gap-1.5">
-          <kbd className="hidden md:inline-flex items-center gap-0.5 rounded-lg border border-slate-200 bg-slate-100 px-2 py-1 text-[11px] font-mono text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
-            Ctrl+K
-          </kbd>
+        <div className="absolute left-2.5 sm:left-3 flex items-center gap-1.5">
+          {query ? (
+            <button
+              type="button"
+              onClick={() => {
+                setQuery("");
+                searchInputRef.current?.focus();
+              }}
+              className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+              aria-label="پاک کردن"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          ) : (
+            <kbd className="hidden md:inline-flex items-center gap-0.5 rounded-lg border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-mono text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
+              Ctrl+K
+            </kbd>
+          )}
+
           <button
             type="button"
             onClick={onOpenNewPatientModal}
-            className="flex items-center gap-1 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors"
+            className="flex items-center gap-1 rounded-xl bg-teal-600 px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-teal-700 transition-colors"
+            title="تشکیل پرونده بیمار جدید"
           >
             <UserPlus className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">بیمار جدید</span>
+            <span className="hidden sm:inline">تشکیل پرونده</span>
           </button>
         </div>
       </div>
@@ -107,16 +123,16 @@ export function PatientSearch({
             className="fixed inset-0 z-30"
             onClick={() => setIsFocused(false)}
           />
-          <div className="absolute right-0 left-0 top-full z-40 mt-2 max-h-96 overflow-y-auto rounded-2xl border border-slate-200 bg-white/95 backdrop-blur-xl p-2 shadow-2xl dark:border-slate-800 dark:bg-slate-900/95 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800/80 mb-1">
+          <div className="absolute right-0 left-0 top-full z-40 mt-2 max-h-96 overflow-y-auto rounded-2xl border border-slate-200 bg-white/98 backdrop-blur-xl p-2 shadow-2xl dark:border-slate-800 dark:bg-slate-900/98 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-1">
               <span>نتایج جست‌وجو ({formatPersianNumber(results.length)} پرونده)</span>
-              <span className="text-[11px]">با کلیدهای ↑ و ↓ جابه‌جا شوید</span>
+              <span className="text-[11px] hidden sm:inline">با کلیدهای ↑ و ↓ جابه‌جا شوید</span>
             </div>
 
             {results.length === 0 ? (
-              <div className="py-8 text-center">
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                  پرونده‌ای با مشخصات وارد شده یافت نشد.
+              <div className="py-6 text-center">
+                <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400">
+                  پرونده‌ای با این مشخصات یافت نشد.
                 </p>
                 <button
                   type="button"
@@ -124,10 +140,10 @@ export function PatientSearch({
                     setIsFocused(false);
                     onOpenNewPatientModal();
                   }}
-                  className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 text-emerald-700 px-4 py-2 text-xs font-semibold hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 transition-colors"
+                  className="mt-2.5 inline-flex items-center gap-1.5 rounded-xl bg-slate-100 text-slate-800 px-3.5 py-1.5 text-xs font-semibold hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors"
                 >
-                  <UserPlus className="h-4 w-4" />
-                  تشکیل پرونده سریع برای «{query}»
+                  <UserPlus className="h-3.5 w-3.5" />
+                  تشکیل پرونده جدید
                 </button>
               </div>
             ) : (
@@ -139,41 +155,33 @@ export function PatientSearch({
                       key={patient.id}
                       onClick={() => handleSelect(patient)}
                       onMouseEnter={() => setSelectedIndex(index)}
-                      className={`group flex items-center justify-between rounded-xl p-3 cursor-pointer transition-all duration-150 ${
+                      className={`group flex items-center justify-between rounded-xl p-2.5 sm:p-3 cursor-pointer transition-colors ${
                         isSelected
-                          ? "bg-emerald-50/90 text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-100 shadow-sm"
-                          : "hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                          ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100"
+                          : "hover:bg-slate-50 dark:hover:bg-slate-850"
                       }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold ${
-                            patient.sex === "female"
-                              ? "bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300"
-                              : "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300"
-                          }`}
-                        >
-                          {patient.fullName.slice(0, 1)}
-                        </div>
-                        <div>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <PatientAvatar sex={patient.sex} name={patient.fullName} size="sm" />
+                        <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-900 dark:text-slate-100">
+                            <span className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate">
                               {patient.fullName}
                             </span>
                             {patient.age && (
-                              <span className="text-xs text-slate-500 dark:text-slate-400">
+                              <span className="text-xs text-slate-500 dark:text-slate-400 shrink-0">
                                 ({formatPersianNumber(patient.age)} ساله)
                               </span>
                             )}
                             {patient.bloodType && (
-                              <Badge variant="outline" className="text-[10px] py-0 px-1.5">
+                              <Badge variant="outline" className="text-[10px] py-0 px-1.5 shrink-0 border-slate-200 dark:border-slate-700">
                                 {patient.bloodType}
                               </Badge>
                             )}
                           </div>
-                          <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-slate-500 dark:text-slate-400">
+                          <div className="flex flex-wrap items-center gap-2.5 mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                             {patient.nationalId && (
-                              <span className="flex items-center gap-1">
+                              <span className="flex items-center gap-1 font-mono">
                                 <CreditCard className="h-3 w-3 text-slate-400" />
                                 {formatPersianNumber(patient.nationalId)}
                               </span>
@@ -182,21 +190,15 @@ export function PatientSearch({
                               <Phone className="h-3 w-3 text-slate-400" />
                               {formatPersianNumber(patient.phone)}
                             </span>
-                            {patient.chronicConditions && patient.chronicConditions.length > 0 && (
-                              <span className="hidden sm:flex items-center gap-1 text-amber-600 dark:text-amber-400">
-                                <Activity className="h-3 w-3" />
-                                {patient.chronicConditions.join("، ")}
-                              </span>
-                            )}
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                          مشاهده پرونده
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className="text-xs font-semibold text-teal-600 dark:text-teal-400 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:inline">
+                          مشاهده
                         </span>
-                        <ChevronLeft className="h-4 w-4 text-slate-400 group-hover:text-emerald-600 group-hover:-translate-x-0.5 transition-all" />
+                        <ChevronLeft className="h-4 w-4 text-slate-400 group-hover:text-teal-600 dark:group-hover:text-teal-400 group-hover:-translate-x-0.5 transition-all" />
                       </div>
                     </div>
                   );

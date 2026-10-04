@@ -1,17 +1,42 @@
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #f8fafc;
   --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --border: #e2e8f0;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
   --font-vazir: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #090d16;
-    --foreground: #f1f5f9;
-  }
+.dark {
+  --background: #09090b;
+  --foreground: #f4f4f5;
+  --card: #121215;
+  --card-foreground: #f4f4f5;
+  --border: #232328;
+  --muted: #18181b;
+  --muted-foreground: #a1a1aa;
+
+  /* Desaturate dark slate neutrals to calming, high-end zinc/charcoal */
+  --color-slate-950: #09090b;
+  --color-slate-900: #121215;
+  --color-slate-850: #161619;
+  --color-slate-800: #1d1d22;
+  --color-slate-750: #24242a;
+  --color-slate-700: #2d2d35;
+  --color-slate-600: #52525c;
+  --color-slate-500: #71717a;
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
 }
 
 html {
@@ -44,6 +69,14 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(100, 116, 139, 0.6);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.4);
 }
 
 /* Print Styles for Medical Prescriptions & Summaries */

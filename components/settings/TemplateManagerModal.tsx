@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { SpecialtyTemplatePhrase, SpecialtyType, TemplateSection } from "@/types/medical";
 import { addCustomTemplatePhrase, getTemplates } from "@/lib/storage";
 import { formatPersianNumber } from "@/lib/utils";
-import { Plus, Search, Check, Layers, BookOpen } from "lucide-react";
+import { Plus, Search, Layers } from "lucide-react";
 
 interface TemplateManagerModalProps {
   isOpen: boolean;
@@ -78,35 +78,35 @@ export function TemplateManagerModal({
       onClose={onClose}
       title={
         <div className="flex items-center gap-2">
-          <Layers className="h-5 w-5 text-emerald-600" />
-          <span>کتابخانه عبارت‌های آماده بالینی (قالب‌های ویزیت)</span>
+          <Layers className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+          <span>کتابخانه عبارت‌های بالینی (قالب‌های ویزیت)</span>
         </div>
       }
-      description="مشاهده و شخصی‌سازی عبارت‌های ساختاریافته برای هر تخصص"
+      description="مدیریت و شخصی‌سازی عبارت‌های ساختاریافته به تفکیک تخصص پزشکی"
       maxWidth="3xl"
     >
-      <div className="space-y-5">
-        {/* Specialty filter */}
+      <div className="space-y-4 sm:space-y-5">
+        {/* Specialty filter & Search */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <div className="flex rounded-xl border border-slate-200 p-1 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
             <button
               type="button"
               onClick={() => setActiveSpecialty("internal")}
-              className={`rounded-lg px-4 py-1.5 text-xs font-bold transition-all ${
+              className={`rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
                 activeSpecialty === "internal"
-                  ? "bg-white text-emerald-700 shadow-sm dark:bg-slate-800 dark:text-emerald-400"
-                  : "text-slate-500 hover:text-slate-800"
+                  ? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100"
+                  : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
               }`}
             >
-              تخصص بیماری‌های داخلی
+              تخصص داخلی
             </button>
             <button
               type="button"
               onClick={() => setActiveSpecialty("general")}
-              className={`rounded-lg px-4 py-1.5 text-xs font-bold transition-all ${
+              className={`rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all ${
                 activeSpecialty === "general"
-                  ? "bg-white text-emerald-700 shadow-sm dark:bg-slate-800 dark:text-emerald-400"
-                  : "text-slate-500 hover:text-slate-800"
+                  ? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100"
+                  : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
               }`}
             >
               پزشکی عمومی
@@ -125,25 +125,25 @@ export function TemplateManagerModal({
         </div>
 
         {/* Section Tabs */}
-        <div className="flex border-b border-slate-200 dark:border-slate-800 gap-2">
+        <div className="flex border-b border-slate-200 dark:border-slate-800 gap-2 overflow-x-auto pb-0.5">
           <button
             type="button"
             onClick={() => setActiveSection("chief_complaint")}
-            className={`pb-2.5 text-xs font-bold transition-all border-b-2 ${
+            className={`pb-2.5 text-xs font-bold transition-all border-b-2 whitespace-nowrap ${
               activeSection === "chief_complaint"
-                ? "border-emerald-600 text-emerald-700 dark:text-emerald-400"
-                : "border-transparent text-slate-500 hover:text-slate-800"
+                ? "border-teal-600 text-teal-700 dark:text-teal-400"
+                : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
             }`}
           >
-            شکایات اصلی (Chief Complaints)
+            شکایات اصلی (Chief Complaint)
           </button>
           <button
             type="button"
             onClick={() => setActiveSection("exam_finding")}
-            className={`pb-2.5 text-xs font-bold transition-all border-b-2 ${
+            className={`pb-2.5 text-xs font-bold transition-all border-b-2 whitespace-nowrap ${
               activeSection === "exam_finding"
-                ? "border-emerald-600 text-emerald-700 dark:text-emerald-400"
-                : "border-transparent text-slate-500 hover:text-slate-800"
+                ? "border-teal-600 text-teal-700 dark:text-teal-400"
+                : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
             }`}
           >
             معاینات بالینی (Physical Exam)
@@ -151,10 +151,10 @@ export function TemplateManagerModal({
           <button
             type="button"
             onClick={() => setActiveSection("diagnosis")}
-            className={`pb-2.5 text-xs font-bold transition-all border-b-2 ${
+            className={`pb-2.5 text-xs font-bold transition-all border-b-2 whitespace-nowrap ${
               activeSection === "diagnosis"
-                ? "border-emerald-600 text-emerald-700 dark:text-emerald-400"
-                : "border-transparent text-slate-500 hover:text-slate-800"
+                ? "border-teal-600 text-teal-700 dark:text-teal-400"
+                : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
             }`}
           >
             تشخیص‌های بالینی (Diagnosis)
@@ -165,25 +165,25 @@ export function TemplateManagerModal({
         {!isAdding ? (
           <div className="flex justify-between items-center pt-1">
             <span className="text-xs text-slate-500">
-              تعداد موارد: {formatPersianNumber(filtered.length)} عبارت آماده
+              تعداد موارد: {formatPersianNumber(filtered.length)} عبارت بالینی
             </span>
             <Button
               size="sm"
               variant="outline"
               onClick={() => setIsAdding(true)}
-              className="gap-1.5"
+              className="gap-1.5 text-xs border-slate-200 dark:border-slate-700"
             >
               <Plus className="h-3.5 w-3.5" />
-              افزودن عبارت سفارشی جدید
+              افزودن عبارت جدید
             </Button>
           </div>
         ) : (
           <form
             onSubmit={handleCreate}
-            className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 dark:border-emerald-900/40 dark:bg-emerald-950/20 space-y-3"
+            className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-900/60 space-y-3"
           >
-            <h4 className="text-xs font-bold text-emerald-900 dark:text-emerald-300">
-              افزودن عبارت بالینی جدید به دسته فعال:
+            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
+              افزودن عبارت بالینی جدید:
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div className="sm:col-span-2">
@@ -218,10 +218,11 @@ export function TemplateManagerModal({
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsAdding(false)}
+                className="text-xs"
               >
                 انصراف
               </Button>
-              <Button type="submit" size="sm">
+              <Button type="submit" size="sm" className="bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold">
                 ذخیره در کتابخانه
               </Button>
             </div>
@@ -255,7 +256,7 @@ export function TemplateManagerModal({
         </div>
 
         <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-800">
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" size="sm" onClick={onClose}>
             بستن
           </Button>
         </div>

@@ -73,6 +73,8 @@ export default function HomePage() {
 
   // Current view mode
   const [viewMode, setViewMode] = React.useState<AppViewMode>("view_patient");
+  // Mobile responsive view tab ("profile" vs "patients")
+  const [mobileTab, setMobileTab] = React.useState<"profile" | "patients">("profile");
 
   // State for forms/modals
   const [visitForForm, setVisitForForm] = React.useState<Visit | null>(null);
@@ -148,21 +150,24 @@ export default function HomePage() {
   const handleSelectPatient = (patient: Patient) => {
     setSelectedPatientId(patient.id);
     setViewMode("view_patient");
+    setMobileTab("profile");
   };
 
   const handleStartNewVisit = () => {
     if (currentUser?.role === "receptionist") {
-      alert("منشی مطب فقط به ثبت اطلاعات پایه‌ی بیماران دسترسی دارد. ثبت ویزیت بالینی توسط پزشک انجام می‌شود.");
+      alert("منشی مطب به ثبت اطلاعات پایه‌ی بیماران دسترسی دارد. ثبت ویزیت بالینی توسط پزشک انجام می‌شود.");
       return;
     }
     setVisitForForm(null);
     setViewMode("create_visit");
+    setMobileTab("profile");
   };
 
   const handleEditDraftVisit = (visit: Visit) => {
     if (currentUser?.role === "receptionist") return;
     setVisitForForm(visit);
     setViewMode("edit_draft_visit");
+    setMobileTab("profile");
   };
 
   const handlePrintVisit = (visit: Visit) => {
@@ -173,22 +178,24 @@ export default function HomePage() {
   const handleVisitSaved = (savedVisit: Visit) => {
     loadData();
     setViewMode("view_patient");
+    setMobileTab("profile");
   };
 
   const handlePatientSaved = (patient: Patient) => {
     loadData();
     setSelectedPatientId(patient.id);
     setViewMode("view_patient");
+    setMobileTab("profile");
   };
 
   if (!isMounted || !activeDoctor || !metrics || !currentUser) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
         <div className="text-center space-y-3">
-          <div className="mx-auto flex h-14 w-14 animate-pulse items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-xl shadow-emerald-600/30">
+          <div className="mx-auto flex h-14 w-14 animate-pulse items-center justify-center rounded-2xl bg-teal-600 text-white shadow-xl shadow-teal-600/20">
             <Stethoscope className="h-7 w-7" />
           </div>
-          <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
             در حال بارگذاری سامانه مطب هوشمند MediDoc...
           </p>
         </div>
@@ -200,7 +207,7 @@ export default function HomePage() {
   const isAdmin = currentUser.role === "admin";
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50/60 dark:bg-slate-950/80">
+    <div className="min-h-screen flex flex-col bg-slate-50/70 dark:bg-slate-950 transition-colors">
       {/* Clinic Header */}
       <Header
         activeDoctor={activeDoctor}
@@ -226,39 +233,39 @@ export default function HomePage() {
 
       {/* Role Notice Banners */}
       {isReceptionist && (
-        <div className="border-b border-purple-200 bg-purple-50/80 px-4 py-2.5 text-xs text-purple-900 dark:border-purple-900/50 dark:bg-purple-950/40 dark:text-purple-300 flex items-center justify-between">
+        <div className="border-b border-slate-200/90 bg-slate-100/90 px-4 py-2.5 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-900/90 dark:text-slate-300">
           <div className="flex items-center gap-2 max-w-7xl mx-auto w-full">
-            <Building2 className="h-4 w-4 text-purple-600 shrink-0" />
+            <Building2 className="h-4 w-4 text-teal-600 dark:text-teal-400 shrink-0" />
             <span>
-              <strong>میز کار پذیرش (منشی مطب ونک):</strong> شما می‌توانید اطلاعات هویتی و پرونده جدید را برای بیماران ثبت فرمایید تا پزشک ویزیت بالینی را آغاز کند. دسترسی به تشخیص‌ها و ویزیت‌های محرمانه محدود شده است (سند ۰۶).
+              <strong>میز کار پذیرش (منشی مطب):</strong> ثبت مشخصات هویتی و پرونده جدید برای مراجعین فعال است. جزئیات بالینی محرمانه بر اساس ماتریس دسترسی ویژه پزشک معالج است.
             </span>
           </div>
         </div>
       )}
 
       {isAdmin && (
-        <div className="border-b border-rose-200 bg-rose-50/80 px-4 py-2 text-xs text-rose-900 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300 flex items-center justify-between">
-          <div className="flex items-center justify-between max-w-7xl mx-auto w-full">
+        <div className="border-b border-slate-200/90 bg-slate-100/90 px-4 py-2.5 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-900/90 dark:text-slate-300">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 max-w-7xl mx-auto w-full">
             <span className="flex items-center gap-2">
-              <ShieldAlert className="h-4 w-4 text-rose-600 shrink-0" />
+              <ShieldAlert className="h-4 w-4 text-amber-500 shrink-0" />
               <strong>حالت نظارت ادمین سیستم:</strong> شما به کنسول مدیریت کاربران، تخصیص مطب‌ها و لاگ امنیتی (Audit Trail) دسترسی کامل دارید.
             </span>
             <Button
               size="sm"
               onClick={() => setIsAdminModalOpen(true)}
-              className="h-7 text-xs bg-rose-600 hover:bg-rose-700 text-white"
+              className="h-7 text-xs bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
             >
-              کنسول مدیریت ادمین
+              کنسول مدیریت
             </Button>
           </div>
         </div>
       )}
 
       {/* Main Container */}
-      <main className="mx-auto w-full max-w-7xl flex-1 p-4 sm:p-6 space-y-6">
+      <main className="mx-auto w-full max-w-7xl flex-1 p-3 sm:p-6 space-y-4 sm:space-y-6">
         {/* Fast Search Hero Row */}
         {viewMode !== "print_visit" && (
-          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4">
             <div className="flex-1 max-w-3xl">
               <PatientSearch
                 onSelectPatient={handleSelectPatient}
@@ -270,13 +277,13 @@ export default function HomePage() {
             </div>
 
             <div className="hidden lg:flex items-center gap-3 shrink-0">
-              <div className="flex items-center gap-2 rounded-2xl border border-slate-200/90 bg-white/90 px-3.5 py-2 text-xs font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-900/90 dark:text-slate-300">
-                <Users className="h-4 w-4 text-emerald-600" />
+              <div className="flex items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-sm">
+                <Users className="h-4 w-4 text-teal-600 dark:text-teal-400" />
                 <span>کل بیماران: {patients.length} پرونده</span>
               </div>
 
-              <div className="flex items-center gap-2 rounded-2xl border border-slate-200/90 bg-white/90 px-3.5 py-2 text-xs font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-900/90 dark:text-slate-300">
-                <Stethoscope className="h-4 w-4 text-blue-600" />
+              <div className="flex items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-sm">
+                <Stethoscope className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                 <span>ویزیت‌ها: {visits.length} ویزیت</span>
               </div>
             </div>
@@ -292,128 +299,163 @@ export default function HomePage() {
             onBack={() => setViewMode("view_patient")}
           />
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Sidebar / Left Column: Patient Directory (4 cols) */}
-            <div className="lg:col-span-4 order-2 lg:order-1">
-              <div className="rounded-3xl border border-slate-200/80 bg-white/80 p-4 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80 shadow-sm">
-                <div className="flex items-center justify-between pb-3 mb-2 border-b border-slate-100 dark:border-slate-800">
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    لیست مراجعین {activeOfficeId ? "(مطب انتخابی)" : "(کلیه مطب‌ها)"}
-                  </span>
-                  <Badge variant="default" className="text-[10px]">
-                    {patients.length} پرونده
-                  </Badge>
-                </div>
-                <PatientList
-                  patients={patients}
-                  visits={visits}
-                  selectedPatientId={selectedPatientId || undefined}
-                  onSelectPatient={handleSelectPatient}
-                />
-              </div>
+          <div className="space-y-4">
+            {/* Tablet & Mobile Segmented View Switcher */}
+            <div className="lg:hidden flex rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-900">
+              <button
+                type="button"
+                onClick={() => setMobileTab("profile")}
+                className={`flex-1 rounded-lg py-2 text-xs font-bold transition-all ${
+                  mobileTab === "profile"
+                    ? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100"
+                    : "text-slate-600 dark:text-slate-400"
+                }`}
+              >
+                پرونده بیمار {selectedPatient ? `(${selectedPatient.fullName})` : ""}
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileTab("patients")}
+                className={`flex-1 rounded-lg py-2 text-xs font-bold transition-all ${
+                  mobileTab === "patients"
+                    ? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100"
+                    : "text-slate-600 dark:text-slate-400"
+                }`}
+              >
+                لیست مراجعین ({patients.length})
+              </button>
             </div>
 
-            {/* Main Stage: Patient Profile & Encounter Form or Timeline (8 cols) */}
-            <div className="lg:col-span-8 order-1 lg:order-2 space-y-6">
-              {viewMode === "create_visit" || viewMode === "edit_draft_visit" ? (
-                selectedPatient && (
-                  <div className="space-y-4 animate-in fade-in zoom-in-95 duration-200">
-                    <div className="flex items-center justify-between pb-1">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setViewMode("view_patient")}
-                        className="gap-1.5"
-                      >
-                        <ArrowRight className="h-4 w-4" />
-                        <span>بازگشت به پرونده بیمار</span>
-                      </Button>
-                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                        {viewMode === "edit_draft_visit"
-                          ? "در حال ویرایش پیش‌نویس ویزیت"
-                          : "فرم ثبت ویزیت بالینی جدید (مطب هوشمند)"}
-                      </span>
-                    </div>
-
-                    <VisitForm
-                      patient={selectedPatient}
-                      doctor={activeDoctor}
-                      initialVisit={visitForForm}
-                      onSaved={handleVisitSaved}
-                      onCancel={() => setViewMode("view_patient")}
-                    />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
+              {/* Sidebar / Patient Directory (4 cols on lg) */}
+              <div
+                className={`lg:col-span-4 ${
+                  mobileTab === "patients" ? "block" : "hidden lg:block"
+                }`}
+              >
+                <div className="rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-white/95 p-3.5 sm:p-4 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 shadow-sm">
+                  <div className="flex items-center justify-between pb-3 mb-2 border-b border-slate-100 dark:border-slate-800">
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      لیست مراجعین {activeOfficeId ? "(مطب انتخابی)" : "(همه مطب‌ها)"}
+                    </span>
+                    <Badge variant="secondary" className="text-[10px]">
+                      {patients.length} پرونده
+                    </Badge>
                   </div>
-                )
-              ) : selectedPatient ? (
-                <div className="space-y-6">
-                  {/* Patient Profile Card */}
-                  <PatientProfile
-                    patient={selectedPatient}
-                    visits={selectedPatientVisits}
-                    onStartNewVisit={handleStartNewVisit}
-                    onEditPatient={() => {
-                      setPatientToEdit(selectedPatient);
-                      setIsPatientModalOpen(true);
-                    }}
-                    onOpenShareModal={() => setIsShareModalOpen(true)}
-                    isReadOnly={isReceptionist}
+                  <PatientList
+                    patients={patients}
+                    visits={visits}
+                    selectedPatientId={selectedPatientId || undefined}
+                    onSelectPatient={handleSelectPatient}
                   />
+                </div>
+              </div>
 
-                  {/* Encounter Timeline / Medical History */}
-                  <div className="rounded-3xl border border-slate-200/80 bg-white/80 p-6 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/80 shadow-sm">
-                    {isReceptionist ? (
-                      <div className="text-center py-8 space-y-2">
-                        <FileText className="mx-auto h-10 w-10 text-slate-400" />
-                        <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                          اطلاعات پایه بیمار ثبت و آماده ویزیت است
-                        </h4>
-                        <p className="text-xs text-slate-500 max-w-md mx-auto">
-                          بر اساس ماتریس دسترسی RBAC (سند ۰۶)، جزئیات پزشکی و نسخه‌های ویزیت فقط برای پزشک معالج قابل مشاهده و ثبت است.
-                        </p>
+              {/* Main Stage: Patient Profile & Encounter Form or Timeline (8 cols on lg) */}
+              <div
+                className={`lg:col-span-8 space-y-5 sm:space-y-6 ${
+                  mobileTab === "profile" ? "block" : "hidden lg:block"
+                }`}
+              >
+                {viewMode === "create_visit" || viewMode === "edit_draft_visit" ? (
+                  selectedPatient && (
+                    <div className="space-y-4 animate-in fade-in zoom-in-95 duration-200">
+                      <div className="flex items-center justify-between pb-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setViewMode("view_patient")}
+                          className="gap-1.5 border-slate-200 dark:border-slate-700"
+                        >
+                          <ArrowRight className="h-4 w-4" />
+                          <span>بازگشت به پرونده</span>
+                        </Button>
+                        <span className="text-xs font-bold text-teal-600 dark:text-teal-400">
+                          {viewMode === "edit_draft_visit"
+                            ? "ویرایش پیش‌نویس ویزیت"
+                            : "ثبت ویزیت بالینی جدید"}
+                        </span>
                       </div>
-                    ) : (
-                      <PatientTimeline
-                        visits={selectedPatientVisits}
-                        onSelectVisit={(visit) => setVisitForDetail(visit)}
-                        onEditDraftVisit={handleEditDraftVisit}
-                        onPrintVisit={handlePrintVisit}
+
+                      <VisitForm
+                        patient={selectedPatient}
+                        doctor={activeDoctor}
+                        initialVisit={visitForForm}
+                        onSaved={handleVisitSaved}
+                        onCancel={() => setViewMode("view_patient")}
                       />
-                    )}
+                    </div>
+                  )
+                ) : selectedPatient ? (
+                  <div className="space-y-5 sm:space-y-6">
+                    {/* Patient Profile Card */}
+                    <PatientProfile
+                      patient={selectedPatient}
+                      visits={selectedPatientVisits}
+                      onStartNewVisit={handleStartNewVisit}
+                      onEditPatient={() => {
+                        setPatientToEdit(selectedPatient);
+                        setIsPatientModalOpen(true);
+                      }}
+                      onOpenShareModal={() => setIsShareModalOpen(true)}
+                      isReadOnly={isReceptionist}
+                    />
+
+                    {/* Encounter Timeline / Medical History */}
+                    <div className="rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-white/95 p-4 sm:p-6 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 shadow-sm">
+                      {isReceptionist ? (
+                        <div className="text-center py-8 space-y-2">
+                          <FileText className="mx-auto h-10 w-10 text-slate-400" />
+                          <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                            اطلاعات پایه بیمار ثبت و آماده ویزیت است
+                          </h4>
+                          <p className="text-xs text-slate-500 max-w-md mx-auto">
+                            بر اساس ماتریس دسترسی RBAC (سند ۰۶)، جزئیات پزشکی و ویزیت‌ها توسط پزشک معالج ثبت می‌شود.
+                          </p>
+                        </div>
+                      ) : (
+                        <PatientTimeline
+                          visits={selectedPatientVisits}
+                          onSelectVisit={(visit) => setVisitForDetail(visit)}
+                          onEditDraftVisit={handleEditDraftVisit}
+                          onPrintVisit={handlePrintVisit}
+                        />
+                      )}
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="rounded-3xl border border-dashed border-slate-300 p-16 text-center dark:border-slate-800">
-                  <Users className="mx-auto h-12 w-12 text-slate-400 mb-3" />
-                  <h3 className="text-base font-bold text-slate-700 dark:text-slate-300">
-                    هیچ بیماری انتخاب نشده است
-                  </h3>
-                  <p className="mt-1 text-xs text-slate-500">
-                    از نوار جست‌وجو یا لیست سمت راست یک بیمار را انتخاب کنید.
-                  </p>
-                </div>
-              )}
+                ) : (
+                  <div className="rounded-2xl sm:rounded-3xl border border-dashed border-slate-300 p-12 text-center dark:border-slate-800">
+                    <Users className="mx-auto h-12 w-12 text-slate-400 mb-3" />
+                    <h3 className="text-base font-bold text-slate-700 dark:text-slate-300">
+                      هیچ بیماری انتخاب نشده است
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-500">
+                      از نوار جست‌وجو یا لیست بیماران، یک پرونده را انتخاب فرمایید.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
       </main>
 
       {/* Footer */}
-      <footer className="mt-auto border-t border-slate-200/80 bg-white/60 py-6 text-center text-xs text-slate-500 backdrop-blur-md dark:border-slate-850 dark:bg-slate-900/60 dark:text-slate-400 no-print">
-        <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <footer className="mt-auto border-t border-slate-200 bg-white/70 py-4 sm:py-5 text-center text-xs text-slate-500 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-400 no-print transition-colors">
+        <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
             <span className="font-bold text-slate-800 dark:text-slate-200">
               سامانه جامع مطب هوشمند MediDoc
             </span>
             <span>—</span>
-            <span>معماری چند مطبی، شبکه پزشکان، اشتراک بیمار و هوش مصنوعی (اسناد ۰۵ تا ۰۹)</span>
+            <span>مدیریت یکپارچه چند مطبی، پرونده مشترک و ثبت سریع بالینی</span>
           </div>
-          <div className="flex items-center gap-4 text-[11px]">
-            <span>آماده استقرار تست بر روی Vercel</span>
-            <span>•</span>
-            <span>آماده استقرار تولید بر روی هاستینگ ابری لیارا (Liara)</span>
+          <div className="flex items-center gap-3 text-[11px] text-slate-400">
+            <span>نسخه ۲.۰ پایدار</span>
           </div>
         </div>
       </footer>
+
 
       {/* Modal: New / Edit Patient */}
       <PatientModal

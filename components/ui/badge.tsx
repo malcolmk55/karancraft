@@ -11,6 +11,8 @@ const badgeVariants = cva(
           "border-transparent bg-slate-900 text-slate-50 dark:bg-slate-50 dark:text-slate-900",
         secondary:
           "border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-300",
+        teal:
+          "border-teal-500/20 bg-teal-500/10 text-teal-800 dark:text-teal-300",
         emerald:
           "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
         success:

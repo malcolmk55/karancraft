@@ -45,20 +45,20 @@ export function Modal({
         <Dialog.Backdrop className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm transition-opacity animate-in fade-in duration-200" />
 
         {/* Modal Viewport and Popup */}
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
           <Dialog.Popup
             className={cn(
-              "relative w-full rounded-3xl border border-slate-200 bg-white shadow-2xl transition-all duration-200 animate-in zoom-in-95 dark:border-slate-800 dark:bg-slate-900 max-h-[92vh] flex flex-col overflow-hidden my-auto outline-none",
+              "relative w-full rounded-2xl sm:rounded-3xl border border-slate-200 bg-white shadow-2xl transition-all duration-200 animate-in zoom-in-95 dark:border-slate-800 dark:bg-slate-900 max-h-[92vh] flex flex-col overflow-hidden my-auto outline-none",
               maxWidthClasses,
               className
             )}
           >
             {/* Header */}
             {(title || description) && (
-              <div className="flex items-start justify-between border-b border-slate-100 p-5 dark:border-slate-800">
-                <div>
+              <div className="flex items-start justify-between gap-3 border-b border-slate-100 p-4 sm:p-5 dark:border-slate-800">
+                <div className="min-w-0 flex-1">
                   {title && (
-                    <Dialog.Title className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                    <Dialog.Title className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
                       {title}
                     </Dialog.Title>
                   )}
@@ -69,7 +69,8 @@ export function Modal({
                   )}
                 </div>
                 <Dialog.Close
-                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                  onClick={onClose}
+                  className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer shrink-0"
                   aria-label="بستن پنجره"
                 >
                   <X className="h-5 w-5" />
@@ -78,7 +79,7 @@ export function Modal({
             )}
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-5">{children}</div>
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6">{children}</div>
           </Dialog.Popup>
         </div>
       </Dialog.Portal>

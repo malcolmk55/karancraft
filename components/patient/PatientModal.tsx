@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Patient, SexType } from "@/types/medical";
 import { savePatient } from "@/lib/storage";
-import { User, Phone, CreditCard, Calendar, HeartPulse, AlertCircle, Plus, X } from "lucide-react";
+import { User, Phone, CreditCard, Calendar, AlertCircle, Plus, X } from "lucide-react";
+import { PatientAvatar } from "@/components/patient/PatientAvatar";
 
 interface PatientModalProps {
   isOpen: boolean;
@@ -76,7 +77,7 @@ export function PatientModal({
       return;
     }
     if (!phone.trim()) {
-      setError("شماره تماس الزامی است.");
+      setError("شماره همراه الزامی است.");
       return;
     }
 
@@ -128,18 +129,18 @@ export function PatientModal({
       isOpen={isOpen}
       onClose={onClose}
       title={patientToEdit ? "ویرایش پرونده بیمار" : "ثبت پرونده بیمار جدید"}
-      description="مشخصات هویتی و سوابق پزشکی بیمار را ثبت کنید."
+      description="مشخصات هویتی و سوابق پزشکی بیمار را ثبت فرمایید."
       maxWidth="2xl"
     >
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
         {error && (
-          <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
+          <div className="flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs font-semibold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200 dark:border-rose-900/40">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
               نام و نام خانوادگی بیمار <span className="text-rose-500">*</span>
@@ -147,7 +148,7 @@ export function PatientModal({
             <Input
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              placeholder="مثال: علی حسینی"
+              placeholder="مثال: علیرضا محمدی"
               icon={<User className="h-4 w-4" />}
               autoFocus
             />
@@ -198,24 +199,26 @@ export function PatientModal({
                 <button
                   type="button"
                   onClick={() => setSex("male")}
-                  className={`flex-1 rounded-lg text-xs font-bold transition-colors ${
+                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg text-xs font-bold transition-colors ${
                     sex === "male"
-                      ? "bg-white text-emerald-700 shadow-sm dark:bg-slate-800 dark:text-emerald-400"
-                      : "text-slate-500 hover:text-slate-800"
+                      ? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100"
+                      : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
                   }`}
                 >
-                  مرد
+                  <PatientAvatar sex="male" size="xs" className="border-0 bg-transparent shadow-none" />
+                  <span>مرد</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setSex("female")}
-                  className={`flex-1 rounded-lg text-xs font-bold transition-colors ${
+                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg text-xs font-bold transition-colors ${
                     sex === "female"
-                      ? "bg-white text-purple-700 shadow-sm dark:bg-slate-800 dark:text-purple-400"
-                      : "text-slate-500 hover:text-slate-800"
+                      ? "bg-white text-slate-900 shadow-sm dark:bg-slate-800 dark:text-slate-100"
+                      : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
                   }`}
                 >
-                  زن
+                  <PatientAvatar sex="female" size="xs" className="border-0 bg-transparent shadow-none" />
+                  <span>زن</span>
                 </button>
               </div>
             </div>
@@ -223,8 +226,8 @@ export function PatientModal({
         </div>
 
         {/* Blood Type & Allergies */}
-        <div className="border-t border-slate-100 pt-4 dark:border-slate-800/80">
-          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
+        <div className="border-t border-slate-100 pt-3 sm:pt-4 dark:border-slate-800/80">
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
             حساسیت‌های دارویی و آلرژی‌ها
           </label>
           <div className="flex flex-wrap gap-1.5 mb-2">
@@ -237,7 +240,7 @@ export function PatientModal({
                   onClick={() => toggleAllergy(item)}
                   className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
                     isSelected
-                      ? "bg-rose-500 text-white shadow-sm"
+                      ? "bg-rose-600 text-white font-semibold shadow-sm"
                       : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
                   }`}
                 >
@@ -264,7 +267,7 @@ export function PatientModal({
               variant="outline"
               size="sm"
               onClick={addCustomAllergy}
-              className="shrink-0"
+              className="shrink-0 text-xs"
             >
               <Plus className="h-3.5 w-3.5" />
               افزودن
@@ -273,8 +276,8 @@ export function PatientModal({
         </div>
 
         {/* Chronic Conditions */}
-        <div className="border-t border-slate-100 pt-4 dark:border-slate-800/80">
-          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
+        <div className="border-t border-slate-100 pt-3 sm:pt-4 dark:border-slate-800/80">
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
             بیماری‌های زمینه‌ای و مزمن
           </label>
           <div className="flex flex-wrap gap-1.5 mb-2">
@@ -287,7 +290,7 @@ export function PatientModal({
                   onClick={() => toggleCondition(item)}
                   className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-all ${
                     isSelected
-                      ? "bg-amber-500 text-white shadow-sm"
+                      ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-semibold shadow-sm"
                       : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
                   }`}
                 >
@@ -314,7 +317,7 @@ export function PatientModal({
               variant="outline"
               size="sm"
               onClick={addCustomCondition}
-              className="shrink-0"
+              className="shrink-0 text-xs"
             >
               <Plus className="h-3.5 w-3.5" />
               افزودن
@@ -332,17 +335,17 @@ export function PatientModal({
             onChange={(e) => setNotes(e.target.value)}
             rows={2}
             placeholder="توضیحات کلی راجع به بیمار، شغل، مراجعات پیشین و..."
-            className="w-full rounded-xl border border-slate-200 bg-white/70 p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-100"
+            className="w-full rounded-xl border border-slate-200 bg-white/70 p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 dark:border-slate-800 dark:bg-slate-900/70 dark:text-slate-100"
           />
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-end gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
-          <Button type="button" variant="ghost" onClick={onClose}>
+        <div className="flex items-center justify-end gap-2 sm:gap-3 border-t border-slate-100 pt-3 sm:pt-4 dark:border-slate-800">
+          <Button type="button" variant="ghost" size="sm" onClick={onClose}>
             انصراف
           </Button>
-          <Button type="submit">
-            {patientToEdit ? "ذخیره تغییرات پرونده" : "ایجاد و باز کردن پرونده"}
+          <Button type="submit" size="sm" className="bg-teal-600 hover:bg-teal-700 text-white font-semibold">
+            {patientToEdit ? "ذخیره تغییرات پرونده" : "تشکیل و ثبت پرونده"}
           </Button>
         </div>
       </form>
